@@ -86,7 +86,7 @@ nrow(vsumm)
 ################################################################################
 # Simulate whale density
 
-vsumm <- simulate_whale(vsumm)
+vsumm <- simulate_whale(vsumm, d_mean = 0.015, d_cv = 0.135)
 head(vsumm)
 tail(vsumm)
 
@@ -111,10 +111,41 @@ pwhale <- truncnorm::rtruncnorm(n=10000,
                       sd = vsumm$d_cv * vsumm$d_mean,
                       a=0)
 hist(pwhale, breaks=20)
+length(pwhale)
 
 # Create p(encounter) distribution
     # Draw speed/length/width/draft
     # Draw whale length/speed/track_variability # Get whale width
+
+#b <- 1
+#summaries <- data.frame()
+#encounter_tally <- c()
+B <- 100
+b <- 100
+pb <- txtProgressBar(1, B, style=3) # setup progress bar
+p_encounters <- c()
+for(i in 1:B){
+  params.ship <- data.frame(v.ship=10, l.ship=300, w.ship=50)
+  v.whale <- 2
+  l.whale <- 20
+  w.whale <- 5
+  delta.sd <- 30
+  encounters <- encounter_simulator(params.ship=params.ship,
+                                    v.whale=v.whale,
+                                    l.whale=l.whale,
+                                    w.whale=w.whale,
+                                    delta.sd=delta.sd,
+                                    B=b,
+                                    save_records=FALSE,
+                                    speedy=TRUE,
+                                    verbose=FALSE,
+                                    toplot=FALSE)
+  (encs <- encounter_tally(encounters)$total)
+  (p_encounter <- encs / B)
+  p_encounters <- c(p_encounters, p_encounter)
+  setTxtProgressBar(pb, i) # update progress bar
+}
+
 
 # Create p(surface) distribution
     # For now, treat as static value
@@ -126,6 +157,7 @@ hist(pwhale, breaks=20)
 # Create p(lethality) distribution
     # Use published data to estimate, based on size/speed
     # Create distribution using size/speed values
+
 
 # Draw from them a bunch and use the outcome() function (with each outcome call, sum across n grid type/month/diel)
 

@@ -8,7 +8,6 @@
 #' @return
 #' @export
 #'
-#' @examples
 simulate_vessel<- function(grids,
                            vessels,
                            toplot=TRUE,
@@ -48,7 +47,7 @@ simulate_vessel<- function(grids,
                    direction = 0, # 0 = reg; 1 = rev; 2 = random
                    course = tanker_route)
 
-    vessels <- list(cfv, tanker)
+    vessels <- list(tanker)
     verbose <- TRUE
   }
 
@@ -71,7 +70,7 @@ simulate_vessel<- function(grids,
       vdraft <- vlength * vessi$draft
       vspeed <- runif(1, vessi$speed_min, vessi$speed_max)
       (hh <- ifelse(is.null(vessi$hour),sample(0:23,1),vessi$hour))
-      (months <- ifelse(is.null(vessi$months),1:12,vessi$months))
+      if(is.null(vessi$months)){months <- 1:12}else{months <- vessi$months} ; months
       (vdir <- ifelse(is.null(vessi$direction),0,vessi$direction))
 
       # If course is not provided, make one up
@@ -116,7 +115,7 @@ simulate_vessel<- function(grids,
 
       # Randomly select start date/time
       (yyyy <- lubridate::year(Sys.time()))
-      (mo <- sample(1:months,size=1))
+      (mo <- sample(months,size=1))
       (dd <- sample(1:28,size=1))
       # hh is optionally provided by user above
       (mm <- sample(0:59, size=1))

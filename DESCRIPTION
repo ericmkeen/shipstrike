@@ -15,14 +15,20 @@ Imports:
     DT,
     lubridate,
     magrittr,
+    plotrix,
     readr,
     rintrojs,
+    sf,
     shiny,
     shinydashboard,
     shinyjs,
     shinythemes,
+    sp,
     stringr,
     suncalc,
     truncnorm,
     usethis,
     wesanderson
+Depends: 
+    R (>= 2.10)
+LazyData: true

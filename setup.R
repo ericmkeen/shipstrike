@@ -34,6 +34,9 @@ if(FALSE){
   use_package('bangarang')
   use_package('suncalc')
   use_package('truncnorm')
+  use_package('plotrix')
+  use_package('sp')
+  use_package('sf')
 }
 
 use_mit_license()
