@@ -91,7 +91,7 @@ for(monthi in months){
           #par(mar=c(4.3,4.2,3,.5))
           #results$p_encounter %>% hist(main=paste0('After month ',monthi,': ',dieli,': iteration ',i), xlab = 'Encounter rate', breaks=20)
         } # end of encounters B loop
-        message('Encounter rates: ',paste(results$p_encounter[results$month == monthi & results$diel == dieli], collapse=', '))
+        message('\nEncounter rates: ',paste(results$p_encounter[results$month == monthi & results$diel == dieli], collapse=', '))
         par(mfrow=c(1,1))
       } # end of if nrow vmd > 0
     } # end of diels loop
@@ -100,7 +100,14 @@ for(monthi in months){
 
 # Review
 par(mar=c(4.2, 4.2, 3, .5))
-p_encounters %>% hist
+results$p_encounter %>% hist
+
+
+load('tests/p_encounter.RData')
+results %>% names()
+results %>% nrow
+results$month %>% table
+
 
 
 ################################################################################

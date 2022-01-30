@@ -2,6 +2,7 @@
 
 export(encounter_simulator)
 export(encounter_tally)
+export(get_seafloor)
 export(make_grid)
 export(outcome)
 export(simulate_vessel)

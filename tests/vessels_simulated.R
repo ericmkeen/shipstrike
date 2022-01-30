@@ -4,13 +4,19 @@
 ################################################################################
 # Make grid
 
-grids <- make_grid(xlims = c(-129.75, -128.5),
-                   ylims = c(52.75, 54.1),
-                   grid_int = 1.287)
+grids <- read.csv('tests/grid-kfs-1km.csv',stringsAsFactors=FALSE)
+
+#grids <- make_grid(xlims = c(-129.75, -128.5),
+#                   ylims = c(52.75, 54.1),
+#                   grid_int = 1.287)
 
 plot(x=grids$x, y=grids$y, cex=.1, pch=16)
 range(grids$km2)
 mean(grids$km2)
+
+library(bangarang)
+plotKFS()
+points(x=grids$x, y=grids$y, cex=.2, pch=16)
 
 ################################################################################
 # Simulate vessels
@@ -31,6 +37,8 @@ tanker <- list(type='tanker',
 
 vessels <- simulate_vessel(grids, vessels=list(tanker))
 vessels %>% head
+
+#points(x=vessels$x,y=vessels$y, col='red', pch=16, cex=.5)
 
 ################################################################################
 # Interpolate & grid associate vessels

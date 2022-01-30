@@ -3,160 +3,79 @@
 ################################################################################
 
 library(dplyr)
-
-getwd()
-lta <- readRDS('tests/lta/lta-data.rds')
-head(lta)
-
-eff <- lta$eff %>% dplyr::mutate(day = gsub('-','',day))
-head(eff)
-
-lta$siw13 %>% head
-sit13 <- lta$siw13 %>%
-  dplyr::filter(eff==1) %>%
-  dplyr::select(sp = spp,
-                distance = dist.track,
-                size = best,
-                datetime = date,
-                block,
-                bft,
-                lon = X,
-                lat = Y) %>%
-  dplyr::mutate(year = 2013) %>%
-  dplyr::mutate(day = gsub('-','',substr(datetime,1,10)))
-head(sit13)
-# Need to correct X/Y
-
-lta$siw14 %>% head
-sit14 <- lta$siw14 %>%
-  dplyr::filter(eff==1) %>%
-  dplyr::select(sp,
-                distance = dist.track,
-                size = grp.best,
-                datetime = date,
-                block,
-                bft,
-                lon = X,
-                lat = Y) %>%
-  dplyr::mutate(year = 2014) %>%
-  dplyr::mutate(day = gsub('-','',substr(datetime,1,10)))
-head(sit14)
-
-lta$siw15 %>% head
-sit15 <- lta$siw15 %>%
-  dplyr::filter(eff==1) %>%
-  dplyr::select(sp,
-                distance = dist.track,
-                size = grp.best,
-                datetime = date,
-                block,
-                bft,
-                lon = X,
-                lat = Y) %>%
-  dplyr::mutate(year = 2015) %>%
-  dplyr::mutate(day = gsub('-','',substr(datetime,1,10)))
-head(sit15)
-
-sits <- rbind(sit13, sit14, sit15)
-nrow(sits)
-
-sits
-sits$distance %>% hist
+library(Distance)
+library(dsm)
+library(ggplot2)
+library(raster)
+library(spatstat.geom)
+library(data.table)
 
 ################################################################################
+################################################################################
+# Prep data
+
+segments <- read.csv('tests/bangarang_segments.csv',stringsAsFactors=FALSE)
+head(segments)
+
+sightings <- read.csv('tests/bangarang_sightings.csv',stringsAsFactors=FALSE)
+head(sightings)
+
+# Sanity check
+segs <- sightings$seg_id[sightings$spp==c('FW','BW')]
+segs <- segments %>% dplyr::filter(Sample.Label %in% segs)
+plotKFS()
+points(x=segs$x, y=segs$y)
+
 # Format region labels
+segments <- segments %>% dplyr::filter(block != '')
+segments$Region.Label <- segments$block
+segments$Region.Label[segments$block %in% c('CAA','CAM')] <- 'Caamano'
+segments$Region.Label[segments$block %in% c('CMP')] <- 'Campania'
+segments$Region.Label[segments$block %in% c('SQU')] <- 'Squally'
+segments$Region.Label[segments$block %in% c('EST')] <- 'Estevan'
+segments$Region.Label[segments$block %in% c('VER','WHA','WRI','MCK')] <- 'Other'
+segments$Region.Label %>% table
 
-eff %>% group_by(block) %>% summarize(Region.Label = unique(Region.Label))
-sits$Region.Label <- NA
-sits$Region.Label[sits$block %in% c('CAM','CAA')] <- 1
-sits$Region.Label[sits$block %in% c('CMP')] <- 3
-sits$Region.Label[sits$block %in% c('EST')] <- 2
-sits$Region.Label[sits$block %in% c('SQU')] <- 4
-sits$Region.Label[sits$block %in% c('VER','WHA','WRI','MCK')] <- 5
-sits$Region.Label %>% table
+sightings <- sightings %>% dplyr::filter(block != '')
+sightings$Region.Label <- sightings$block
+sightings$Region.Label[sightings$block %in% c('CAA','CAM')] <- 'Caamano'
+sightings$Region.Label[sightings$block %in% c('CMP')] <- 'Campania'
+sightings$Region.Label[sightings$block %in% c('SQU')] <- 'Squally'
+sightings$Region.Label[sightings$block %in% c('EST')] <- 'Estevan'
+sightings$Region.Label[sightings$block %in% c('VER','WHA','WRI','MCK')] <- 'Other'
+sightings$Region.Label %>% table
 
-################################################################################
-# Associate with physiographic features
+# Format day of year
+segments$doy <- lubridate::yday(segments$datetime)
+sightings$doy <- lubridate::yday(sightings$datetime)
 
-library(readr)
-seafloor <- read_csv('tests/lta/depthframe.csv')
-head(seafloor)
-nrow(seafloor)
-
-sits %>% head
-
-get_seafloor <- function(lon,lat,seafloor){
-  #lon <- -129.4380
-  #lat <- 53.17300
-  z <- zmin <- zmax <- zsd <- NA
-
-  # get seafloors within a km
-  seas <- seafloor %>% dplyr::filter(x >= lon - 0.009009,
-                                     x <= lon + 0.009009,
-                                     y >= lat - 0.009009,
-                                     y <= lat + 0.009009)
-  # Of these, find range & sd
-  (zmin <- abs(max(seas$layer)))
-  (zmax <- abs(min(seas$layer)))
-  (zsd <- abs(sd(seas$layer)))
-
-  # Of these, find closest depth reading to lat/long
-  seas$km <- apply(seas,1,function(seasi){
-    swfscMisc::distance(lat1 = lat,
-                        lon1 = lon,
-                        lat2 = seasi[2],
-                        lon2 = seasi[1],
-                        units='km')
-  })
-  (km_min <- min(seas$km))
-  matchi <- NULL
-  if(km_min < .25){matchi <- which.min(seas$km)}
-  if(!is.null(matchi)){z <- abs(seas$layer[matchi])}
-  zf <- data.frame(z, zmin, zmax, zsd)
-  return(zf)
-}
-
-i=1
-newsits <- data.frame()
-for(i in 1:nrow(sits)){
-  (siti <- sits[i,])
-  (z <- get_seafloor(lon = siti$lon, lat = siti$lat, seafloor))
-  z$zrange <- z$zmax - z$zmin
-  siti <- data.frame(siti,z)
-  newsits <- rbind(newsits, siti)
-}
-newsits
-
-
-################################################################################
-# Format for distance
-
-eff %>% head
-newsits %>% head
-
-# Table with sightings
+# Format table with sightings
+sightings %>% head
 (data_table <-
-    newsits %>%
+    sightings %>%
+    dplyr::filter(spp == 'FW') %>%
     dplyr::transmute(distance = distance,
                      size = size,
-                     Sample.Label = day,
+                     Sample.Label = seg_id,
                      Region.Label = Region.Label,
-                     year = year,
+                     year = substr(day,1,4),
+                     doy = doy,
+                     block = block,
                      bft = bft,
                      z = z,
                      zrange = zrange,
                      zsd = zsd) %>%
     dplyr::mutate(object = 1:dplyr::n()))
 
-# Table linking sightings to segments
+# Format table linking sightings to segments
 (obs_table <- data_table %>% dplyr::select(object, Region.Label, Sample.Label))
 
-# Sample (segments) table
-(sample_table <- eff %>% dplyr::transmute(Sample.Label = day,
-                                          Region.Label = Region.Label,
-                                          Effort = km,
-                                          year = substr(day,1,4)))
+# Format sample (segments) table
+segments %>% head
+sample_table <- segments
 
+
+################################################################################
 ################################################################################
 # Fit detection functions
 
@@ -164,18 +83,13 @@ data_table %>% head
 obs_table %>% head
 sample_table %>% head
 
-# Load the prediction grid (which is the grid cells where vessels occurred)
-load('tests/vessels_sim.RData')
-vessels_sim %>% head
-
-
 # 10%  truncation distance is ~2.0km
 data_table$distance
 quantile(data_table$distance, 0.91, na.rm=TRUE)
 
 dso1 <- Distance::ds(data = data_table, truncation = 2.0,
-                    formula= ~1,
-                    key = 'hn', quiet=FALSE)
+                     formula= ~1,
+                     key = 'hn', quiet=FALSE)
 
 dso2 <- Distance::ds(data = data_table, truncation = 2.0,
                      formula= ~1 + bft,
@@ -189,52 +103,296 @@ Distance::summarize_ds_models(dso1, dso2, dso3)
 
 plot(dso1)
 
-
 ################################################################################
-# bring in detailed effort
-load('tests/lta/effort13.RData')
-load('tests/lta/effort14.RData')
-load('tests/lta/effort15.RData')
-
-head(eff)
-eff$day %>% table %>% table
-
-# Get total surveyed each day
-(days <- eff %>%
-    dplyr::group_by(day) %>%
-    dplyr::summarize(Effort = sum(km),
-                     blocks = paste(block,collapse='-')) %>%
-    dplyr::rename(Sample.Label = day))
-
-# Get
-head(data_table)
-
-# May only be able to use 2014 - 2015 effort
-effort14 %>% head
-effort15 %>% head
-
-# Next step: create segment.data from 14 and 15
-# associate segment.label with each day of effort
-# Get z for each effort point
-
-# Get z for each vsumm grid cell
-
-# Get block (SQU, CMP, CAA, OTHER) for each grid cell and each effort point
-
+################################################################################
 # Then fit DSM
 
-library(dsm)
-dsm.xy <- dsm(count~s(x,y),
-              dso1,
-              sample_table,
-              data_table,
-              method="REML")
+dso_keep <- dso1
+
+# Simply xy - select family
+
+# quasi-poisson
+dsm.qp.xy <- dsm(density.est~s(x,y, k=12), dso_keep, sample_table, data_table, method="REML")
+summary(dsm.qp.xy)
+vis.gam(dsm.qp.xy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100)
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm.qp.xy) ; par(mfrow=c(1,1))
+
+# negative binomial
+dsm.nb.xy <- dsm(density.est~s(x,y, k=12), dso_keep, sample_table, data_table, family=nb(), method="REML")
+summary(dsm.nb.xy)
+vis.gam(dsm.nb.xy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100)
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm.nb.xy) ; par(mfrow=c(1,1))
+
+# tweedie
+dsm.tw.xy <- dsm(density.est~s(x,y, k=12), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm.tw.xy)
+vis.gam(dsm.tw.xy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100)
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm.tw.xy) ; par(mfrow=c(1,1))
+
+# tweedie gives best gg fit.
+# let k be automatically selected
+
+# Round 1 model fitting
+
+dsm1.xy <- dsm(density.est~s(x,y), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xy)
+vis.gam(dsm1.xy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xy) ; par(mfrow=c(1,1))
+AIC(dsm1.xy)
+
+dsm1.xyz <- dsm(density.est~s(x,y) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xyz)
+vis.gam(dsm1.xyz, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyz) ; par(mfrow=c(1,1))
+AIC(dsm1.xyz)
+
+dsm1.xyzsd <- dsm(density.est~s(x,y) + s(zsd), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xyzsd)
+vis.gam(dsm1.xyzsd, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyzsd) ; par(mfrow=c(1,1))
+AIC(dsm1.xyzsd)
+
+dsm1.xyzrange <- dsm(density.est~s(x,y) + s(zrange), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xyzrange)
+vis.gam(dsm1.xyzrange, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyzrange) ; par(mfrow=c(1,1))
+AIC(dsm1.xyzrange)
+
+dsm1.xyy <- dsm(density.est~s(x,y) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xyy)
+vis.gam(dsm1.xyy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyy) ; par(mfrow=c(1,1))
+AIC(dsm1.xyy)
+
+dsm1.xyd <- dsm(density.est~s(x,y) + s(doy), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xyd)
+vis.gam(dsm1.xyd, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyd) ; par(mfrow=c(1,1))
+AIC(dsm1.xyd)
+
+dsm1.xyb <- dsm(density.est~s(x,y) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm1.xyb)
+vis.gam(dsm1.xyb, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyb) ; par(mfrow=c(1,1))
+AIC(dsm1.xyb)
+
+dsm1.xyd %>% AIC # dont us day of year
+dsm1.xyzrange %>% AIC
+dsm1.xyz %>% AIC
+dsm1.xyb %>% AIC
+dsm1.xyy %>% AIC
+dsm1.xyzsd %>% AIC
+dsm1.xy %>% AIC
+
+# Round 2
+dsm2.z <- dsm(density.est~s(x,y) + s(zrange) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm2.z)
+vis.gam(dsm2.z, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.z) ; par(mfrow=c(1,1))
+AIC(dsm2.z)
+
+dsm2.zsd <- dsm(density.est~s(x,y) + s(zrange) + s(zsd), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm2.zsd)
+vis.gam(dsm2.zsd, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.zsd) ; par(mfrow=c(1,1))
+AIC(dsm2.zsd)
+
+dsm2.b <- dsm(density.est~s(x,y) + s(zrange) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm2.b)
+vis.gam(dsm2.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.b) ; par(mfrow=c(1,1))
+AIC(dsm2.b)
+
+dsm2.y <- dsm(density.est~s(x,y) + s(zrange) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm2.y)
+vis.gam(dsm2.y, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.y) ; par(mfrow=c(1,1))
+AIC(dsm2.y)
+
+dsm2.z %>% AIC
+dsm2.zsd %>% AIC
+dsm2.y %>% AIC
+dsm2.b %>% AIC
+dsm1.xyzrange %>% AIC
+
+# Round 3
+dsm3.zsd <- dsm(density.est~s(x,y) + s(zrange) + s(z) + s(zsd), dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm3.zsd)
+vis.gam(dsm3.zsd, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm3.zsd) ; par(mfrow=c(1,1))
+AIC(dsm3.zsd)
+
+dsm3.b <- dsm(density.est~s(x,y) + s(zrange) + s(z) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm3.b)
+vis.gam(dsm3.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm3.b) ; par(mfrow=c(1,1))
+AIC(dsm3.b)
+
+dsm3.y <- dsm(density.est~s(x,y) + s(zrange) + s(z) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm3.y)
+vis.gam(dsm3.y, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm3.y) ; par(mfrow=c(1,1))
+AIC(dsm3.y)
 
 
+dsm3.y %>% AIC # lets ignore year
+dsm3.zsd %>% AIC
+dsm2.z %>% AIC
+dsm3.b %>% AIC
+
+# Round 4
+dsm4.b <- dsm(density.est~s(x,y) + s(zrange) + s(z)  + s(zsd) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
+summary(dsm4.b)
+vis.gam(dsm4.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
+par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm4.b) ; par(mfrow=c(1,1))
+AIC(dsm4.b)
+
+# Compare to
+dsm3.zsd %>% AIC
+
+# Winner:
+dsm3.zsd
+dsm3.zsd %>% summary
+
+vis.gam(dsm.tw.xy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100)
+#vis.gam(dsm3.zsd, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
 
 
+################################################################################
+# Create density surface
 
-source('tests/parameters.R')
+dsm_keep <- dsm.tw.xy
+#dsm_keep <- dsm3.zsd
+
+predict_surface <- function(dsm_keep, sample_table, grids, toplot=TRUE){
+  # Predict on samples
+  d_mean <- predict(dsm_keep, sample_table, off.set=(sample_table$Effort))
+  #hist(d_mean)
+  #plotKFS()
+  #points(x=sample_table$x, y=sample_table$y, cex=d_mean*10)
+
+  # Prepare raster
+  df <- data.frame(x=sample_table$x, y=sample_table$y, z= d_mean)
+  df <- df[complete.cases(df),] ; nrow(df)
+  e <- extent(df[,1:2])
+  r <- raster(e,ncol=150, nrow=150)
+  x <- rasterize(df[, 1:2], r, df[,3], fun=mean)
+  #plot(x)
+
+  # Interpolate with inverse distance weighting
+  mg <- gstat(formula = z~1, locations = ~x+y, data=df,
+              nmax=7, nmin=3,set=list(idp = 0))
+  suppressWarnings({ suppressMessages({
+    xi <- interpolate(x, mg)
+  }) })
+  class(xi)
+  #plot(xi)
+
+  #  Prepare fine-scale grid of densities
+  xdf <- as.data.frame(x, xy=TRUE)
+  z <- as.data.frame(xi) ; z %>% head
+  names(z) <- 'z'
+  xdf$layer <- z$z
+  xdf %>% head
+  mean(xdf$layer)
+
+  # Now use fine-scale raster to find predicted density at each grids location
+  dist <- function(a, b){
+    dt <- data.table((df2$x-a)^2+(df2$y-b)^2)
+    return(which.min(dt$V1))}
+  df1 <- data.table(x=grids$x, y=grids$y) ; head(df1)
+  df2 <- data.table(x=xdf$x, y=xdf$y) ; head(df2)
+  results <- df1[, j = list(Closest =  dist(x, y)), by = 1:nrow(df1)]
+  grids$d_mean <- xdf$layer[results$Closest]
+
+  # Test plot
+  #hist(grids$d_mean)
+  #mean(grids$d_mean, na.rm=TRUE)
+  plotKFS()
+  points(x=grids$x, y=grids$y, cex=grids$d_mean*10)
+
+  return(grids$d_mean)
+}
+
+d_mean <- predict_surface(dsm_keep, sample_table, grids)
+grids$d_mean <- d_mean
+head(grids)
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+# Attempt CV bootstrapping
+
+data_table %>% head
+sample_table %>% head
+
+data_bs <- data_table[complete.cases(data_table),] ; data_bs %>% nrow
+sample_bs <- sample_table[complete.cases(sample_table),] ; sample_bs %>% nrow
+
+d_means <- list()
+for(i in 1:100){
+  message('=========================================\n BOOSTRAP ',i,'\n=========================================')
+  message('--- Preparing bootstrap dataset ...')
+  (seg_bs <- sample(sample_bs$Sample.Label, size=nrow(sample_bs),replace=TRUE))
+  data_bsi <- data.frame()
+  sample_bsi <- data.frame()
+  i=1
+  for(i in 1:length(seg_bs)){
+    (segi <- seg_bs[i])
+    (sampli <- sample_bs %>% dplyr::filter(Sample.Label == segi))
+    sampli$Sample.Label <- i
+    sample_bsi <- rbind(sample_bsi, sampli)
+    (siti <- data_bs %>% dplyr::filter(Sample.Label == segi))
+    if(nrow(siti)>0){
+      siti$Sample.Label <- i
+      data_bsi <- rbind(data_bsi, siti)
+    }
+  }
+
+  if(nrow(data_bsi)<=0){
+    data_bsi <- data.frame(Sample.Label = NA, Effort = NA, x = NA, y = NA, datetime = NA,
+                           year = NA, day = NA, block = NA, z = NA, zmin = NA, zmax = NA, zsd = NA, zrange = NA, Region.Label = NA, doy = NA)
+    (data_bsi <- data_bsi[0,])
+  }
+  data_bsi
+
+  message('--- Fitting detection function ...')
+  suppressWarnings({suppressMessages({
+    dso_bs <- Distance::ds(data = data_bs, truncation = 2.0, formula= ~1, key = 'hn', quiet=FALSE)
+    #plot(dso_bs)
+  }) })
+
+  message('--- Fitting spatial density model ...')
+  suppressWarnings({
+    dsm_bs <- dsm(density.est~s(x,y, k=12), dso_bs, sample_bsi, data_bsi, family=tw(), method="REML")
+  })
+
+  # Predict on samples
+  message('--- Predicting density surface ...')
+  d_mean <- predict_surface(dsm_bs, sample_bsi, grids, toplot=FALSE)
+  d_mean
+
+  d_means[[length(d_means)+1]] <- d_mean
+  message('')
+}
+
+#d_means
+df_means <- data.frame(d_means)
+df_means %>% dim
+d_sd <- apply(df_means,1,sd) %>% as.numeric
+grids$d_sd <- d_sd
+grids$cv <- grids$d_sd / grids$d_mean
+
+plotKFS()
+points(x=grids$x, y=grids$y, cex=d_sd*10)
+
+
+head(grids)
+
+return_list <- list(estimate = grids, bootstraps = df_means, dsm = dsm_keep)
+save(return_list, file='tests/p_whale.RData')
+
 
 # Create p(whale) distribution
 # Draw 10,000 random draws from each grid cell according to its mean / CV
