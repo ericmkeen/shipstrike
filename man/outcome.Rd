@@ -4,7 +4,14 @@
 \alias{outcome}
 \title{Core function for whale-ship collision outcome}
 \usage{
-outcome(p_whale, p_encounter, p_surface, p_avoidance, p_lethality)
+outcome(
+  p_whale,
+  p_encounter,
+  p_surface,
+  p_avoidance,
+  p_lethality,
+  iterations = 1000
+)
 }
 \arguments{
 \item{p_whale}{desc}

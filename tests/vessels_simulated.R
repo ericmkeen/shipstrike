@@ -21,7 +21,7 @@ points(x=grids$x, y=grids$y, cex=.2, pch=16)
 ################################################################################
 # Simulate vessels
 
-data(tanker_route) # bangarang package
+data(tanker_route, package='shipstrike') # shipstrike package
 tanker <- list(type='tanker',
                n=100,
                size_min = 200,
@@ -33,11 +33,13 @@ tanker <- list(type='tanker',
                hour = NULL,
                months = 1:12,
                direction = 0, # 0 = reg; 1 = rev; 2 = random
+               course_var = .002,
                course = tanker_route)
 
 vessels <- simulate_vessel(grids, vessels=list(tanker))
 vessels %>% head
 
+#plotKFS()
 #points(x=vessels$x,y=vessels$y, col='red', pch=16, cex=.5)
 
 ################################################################################

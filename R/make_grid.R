@@ -1,15 +1,30 @@
 #' Create a spatial grid
 #'
-#' @param xlims desc
-#' @param ylims desc
-#' @param grid_int adjust grid_int (km) to get mean grid km2 of 1.00 km2
+#' @param xlims A two-element numeric vector for the left and right limits of your grid,
+#' in decimal degrees of longitude in which W coordinates are negative.
+#' @param ylims A two-element numeric vector for the bottom and top limits of your grid,
+#' in decimal degrees of latitude.
+#' @param grid_int The target interval (in north-south km) represented by each grid cell.
+#' This interval will be translated to degrees latitude and longitude.
+#' If your target is a square km, you may need to adjust this slightly to account for
+#' the smaller distance represented by a degree of longitude at higher latitudes.
 #'
-#' @return
+#' @return A `data.frame` with a row for every grid cell and the following columns:
+#' \itemize{
+#' \item `y1` Bottom (southern) latitude boundary of the grid cell
+#' \item `y2` Top (northern) latitude boundary of the grid cell
+#' \item `y` Center latitude of the grid cell
+#' \item `x1` Left (western) longitude of the grid cell
+#' \item `x2` Right (easter) longitude of the grid cell
+#' \item `x` Center longitude of the grid cell
+#' \item `km2` Spatial area of the grid cell, in square km
+#' \item `id` A unique identifier for each grid cell (`1:nrow(grid)`)
+#' }
 #' @export
 #'
 make_grid <- function(xlims,
                       ylims,
-                      grid_int){
+                      grid_int = 1){
   (y_int <- 1 / (110.57 / grid_int)) # latitude interval
   (ys <- seq(ylims[1],ylims[2],by=y_int))
   (xs <- seq(xlims[1], xlims[2], by=y_int))

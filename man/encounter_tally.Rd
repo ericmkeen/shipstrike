@@ -2,16 +2,24 @@
 % Please edit documentation in R/encounter_tally.R
 \name{encounter_tally}
 \alias{encounter_tally}
-\title{Tally encounters}
+\title{Process and tally close encounters}
 \usage{
 encounter_tally(encounters)
 }
 \arguments{
-\item{encounters}{Result of \code{encounter_simulator()}}
+\item{encounters}{A object holding the result of \code{shipstrike::encounter_simulator()}}
 }
 \value{
-
+A \code{list} with three slots:
+\itemize{
+\item \code{total} A numeric providing the correct total number of encounters.
+\item \code{details} A \code{data.frame} with details for each close encounter and the geometry used to correct near-misses to actual encounters.
+\item \code{whale_length} A \code{data.frame} with details for all simulations in which the whale came within a single whale length of the ship polygon's edge.
+}
 }
 \description{
-This includes processing near misses
+Process the results of \code{shipstrike::encounter_simulator}, including a geometric analysis
+of whether near misses (based on the whale's rostrum location) should actually
+be qualified as a close encounter (i.e., whale and ship polygons actually intersected)
+based on the relative positions and orientations of the two polygons at the time of closest proximity.
 }

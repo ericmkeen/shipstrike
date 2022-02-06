@@ -1,22 +1,36 @@
 #' Encounter rate simulator
 #'
-#' @param params.ship desc
-#' @param v.whale desc
-#' @param l.whale desc
-#' @param delta.sd desc
-#' @param B desc
-#' @param encounter_meters desc
-#' @param speedy desc
-#' @param toplot desc
-#' @param save_records desc
-#' @param verbose desc
-#' @param plot_timeseries desc
+#' This function performs 1 iteration of the encounter simulator. Each iteration contains `B` simulation runs.
+#' To produce a distribution of encounter rate estimates, nest this function call within a `for` loop.
+#' See the `vignette` for details.
 #'
-#' @return
+#' @param params.ship A spatially weighted `data.frame` of vessel characteristics,
+#' as produced by `shipstrike::summarize_grid()`. This dataset should have
+#' three columns: `v.ship` (speed, in knots), `l.ship` (length, in meters), and `w.ship` (beam width, in meters).
+#' @param v.whale A numeric vector of whale travel speeds, in meters per second;
+#' this can be a single value or a distribution of values.
+#' @param l.whale A numeric vector of whale lengths, in meters;
+#' this can be a single value or a distribution of values.
+#' @param delta.sd A numeric vector of directivity values (standard deviation of course changes over a 60-second period);
+#' this can be a single value or a distribution of values.
+#' @param B Number of simulation runs (100 is recommended).
+#' @param encounter_meters The proximity between whale and ship to regard as a close encounter; default is 0 meters.
+#' @param speedy If `TRUE`, detailed results will not be returned in order to save time.
+#' @param toplot If `TRUE`, plots will be printed.
+#' @param save_records If `TRUE`, detailed records of every single run will be saved.
+#' This is ignored if `speedy` is `TRUE`.
+#' @param verbose Boolean; if `TRUE`, progress updates will be printed to the Console.
+#' @param plot_timeseries Deprecated.
+#'
+#' @return A list with the slot `summary` and, if `speedy` is `FALSE` and `save_records` is `TRUE`, the slot `details`.
+#' The `summary` slot provides a synopsis of each simulation run. To summarize the results of your simulator run,
+#' next go to the function `shipstrike::encounter_tally()`.
+#'
 #' @export
 #'
 encounter_simulator <- function(params.ship,
-                                v.whale,l.whale,
+                                v.whale,
+                                l.whale,
                                 w.whale,
                                 delta.sd,
                                 B=100,
@@ -49,6 +63,12 @@ encounter_simulator <- function(params.ship,
     encounter_meters=0
     B <- 100
   }
+
+  #########################################################
+  #########################################################
+  # Convert ship speed from knots to meters per second
+
+  params.ship$v.ship <- params.ship$v.ship * 0.51444
 
   #########################################################
   #########################################################

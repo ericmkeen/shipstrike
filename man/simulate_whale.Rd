@@ -7,15 +7,17 @@
 simulate_whale(grids, d_mean = 0.001, d_cv = 0.3)
 }
 \arguments{
-\item{grids}{desc}
+\item{grids}{The spatial grid to use as the basis for the density surface,
+as produced by \code{shipstrike::make_grid()} (see documentation).}
 
-\item{d_mean}{desc}
+\item{d_mean}{The mean density (animals per square km)}
 
-\item{d_cv}{desc}
+\item{d_cv}{The co-efficient of variation (CV) in density.}
 }
 \value{
-
+The \code{grids} object, with new columns \code{d_mean} and \code{d_cv}.
 }
 \description{
-Simulate whale density (mean / CV)
+A simple function that creates a spatial grid of whale densities
+for use in simulating a shipping impacts assessment.
 }

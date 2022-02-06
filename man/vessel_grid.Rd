@@ -7,17 +7,33 @@
 vessel_grid(grids, vessels, toplot = FALSE, verbose = TRUE)
 }
 \arguments{
-\item{grids}{desc}
+\item{grids}{A spatial grid of cells, as produced by \code{shipstrike::make_grid()} (see documentation)
+(or at least matching the format thereof).}
 
-\item{vessels}{desc}
+\item{vessels}{A \code{data.frame} of position fixes, with the following columns
+(note that the output from \code{shipstrike::simulate_vessel()} meets these criteria):
+\itemize{
+\item \code{vid} = Unique vessel identifier (numeric)
+\item \code{type} = Vessel type (character string)
+\item \code{speed} = Vessel speed, in knots (numeric)
+\item \code{length} = Vessel length, in meters (numeric)
+\item \code{width} = Vessel beam width, in meters (numeric)
+\item \code{draft} = Vessel beam width, in meters (numeric)
+\item \code{datetime} = Datetime in UTC, with format \verb{yyyy-mm-dd hh:mm:ss}
+\item \code{x} = Longitude, decimal degrees (Western degrees negative)
+\item \code{y} = Latitude, decimal degrees (Southern degrees negative)
+}}
 
-\item{toplot}{desc}
+\item{toplot}{A Boolean; if \code{TRUE}, progress plots will be shown.}
 
-\item{verbose}{desc}
+\item{verbose}{A Boolean; if \code{TRUE}, updates will be printed to the Console.}
 }
 \value{
-
+A \code{data.frame} of interpolated vessel position fixes (can be quite large)
+and the grid cell id associated with each position fix.
 }
 \description{
-Interpolate vessel fixes and associate with grid cells
+This function determines each spatial grid cell intersected by each vessel transit.
+To do so, it interpolates position fixes to ensure that there is one at least every
+0.5 km.
 }

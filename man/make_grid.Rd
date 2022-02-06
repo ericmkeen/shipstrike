@@ -4,17 +4,32 @@
 \alias{make_grid}
 \title{Create a spatial grid}
 \usage{
-make_grid(xlims, ylims, grid_int)
+make_grid(xlims, ylims, grid_int = 1)
 }
 \arguments{
-\item{xlims}{desc}
+\item{xlims}{A two-element numeric vector for the left and right limits of your grid,
+in decimal degrees of longitude in which W coordinates are negative.}
 
-\item{ylims}{desc}
+\item{ylims}{A two-element numeric vector for the bottom and top limits of your grid,
+in decimal degrees of latitude.}
 
-\item{grid_int}{adjust grid_int (km) to get mean grid km2 of 1.00 km2}
+\item{grid_int}{The target interval (in north-south km) represented by each grid cell.
+This interval will be translated to degrees latitude and longitude.
+If your target is a square km, you may need to adjust this slightly to account for
+the smaller distance represented by a degree of longitude at higher latitudes.}
 }
 \value{
-
+A \code{data.frame} with a row for every grid cell and the following columns:
+\itemize{
+\item \code{y1} Bottom (southern) latitude boundary of the grid cell
+\item \code{y2} Top (northern) latitude boundary of the grid cell
+\item \code{y} Center latitude of the grid cell
+\item \code{x1} Left (western) longitude of the grid cell
+\item \code{x2} Right (easter) longitude of the grid cell
+\item \code{x} Center longitude of the grid cell
+\item \code{km2} Spatial area of the grid cell, in square km
+\item \code{id} A unique identifier for each grid cell (\code{1:nrow(grid)})
+}
 }
 \description{
 Create a spatial grid

@@ -20,31 +20,41 @@ encounter_simulator(
 )
 }
 \arguments{
-\item{params.ship}{desc}
+\item{params.ship}{A spatially weighted \code{data.frame} of vessel characteristics,
+as produced by \code{shipstrike::summarize_grid()}. This dataset should have
+three columns: \code{v.ship} (speed, in knots), \code{l.ship} (length, in meters), and \code{w.ship} (beam width, in meters).}
 
-\item{v.whale}{desc}
+\item{v.whale}{A numeric vector of whale travel speeds, in meters per second;
+this can be a single value or a distribution of values.}
 
-\item{l.whale}{desc}
+\item{l.whale}{A numeric vector of whale lengths, in meters;
+this can be a single value or a distribution of values.}
 
-\item{delta.sd}{desc}
+\item{delta.sd}{A numeric vector of directivity values (standard deviation of course changes over a 60-second period);
+this can be a single value or a distribution of values.}
 
-\item{B}{desc}
+\item{B}{Number of simulation runs (100 is recommended).}
 
-\item{encounter_meters}{desc}
+\item{encounter_meters}{The proximity between whale and ship to regard as a close encounter; default is 0 meters.}
 
-\item{speedy}{desc}
+\item{speedy}{If \code{TRUE}, detailed results will not be returned in order to save time.}
 
-\item{toplot}{desc}
+\item{toplot}{If \code{TRUE}, plots will be printed.}
 
-\item{save_records}{desc}
+\item{save_records}{If \code{TRUE}, detailed records of every single run will be saved.
+This is ignored if \code{speedy} is \code{TRUE}.}
 
-\item{verbose}{desc}
+\item{verbose}{Boolean; if \code{TRUE}, progress updates will be printed to the Console.}
 
-\item{plot_timeseries}{desc}
+\item{plot_timeseries}{Deprecated.}
 }
 \value{
-
+A list with the slot \code{summary} and, if \code{speedy} is \code{FALSE} and \code{save_records} is \code{TRUE}, the slot \code{details}.
+The \code{summary} slot provides a synopsis of each simulation run. To summarize the results of your simulator run,
+next go to the function \code{shipstrike::encounter_tally()}.
 }
 \description{
-Encounter rate simulator
+This function performs 1 iteration of the encounter simulator. Each iteration contains \code{B} simulation runs.
+To produce a distribution of encounter rate estimates, nest this function call within a \code{for} loop.
+See the \code{vignette} for details.
 }

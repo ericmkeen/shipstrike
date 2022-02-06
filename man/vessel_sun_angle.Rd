@@ -4,14 +4,22 @@
 \alias{vessel_sun_angle}
 \title{Calculate sun angle for a vessel based on \code{datetime}, \code{x}, and \code{y}}
 \usage{
-vessel_sun_angle(vessels)
+vessel_sun_angle(vessels, verbose = FALSE)
 }
 \arguments{
-\item{vessels}{desc}
+\item{vessels}{A \code{date.frame} that has at least the following following columns:
+\itemize{
+\item \code{datetime} = Datetime in UTC, with format \verb{yyyy-mm-dd hh:mm:ss}.
+\item \code{x} = Longitude, decimal degrees (Western degrees negative).
+\item \code{y} = Latitude, decimal degrees (Southern degrees negative).
+}}
+
+\item{verbose}{A Boolean; if \code{TRUE}, updates will be printed to the Console.}
 }
 \value{
-
+A vector, the same length as the number of rows in \code{vessels}, with the
+local vertical angle of the sun at each row.
 }
 \description{
-Calculate sun angle for a vessel based on \code{datetime}, \code{x}, and \code{y}
+This is essentially a convenient wrapper for \code{suncalc::getSunlightPosition}.
 }
