@@ -10,7 +10,9 @@ outcome(
   p_surface,
   p_avoidance,
   p_lethality,
-  iterations = 1000
+  km,
+  iterations = 1000,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -23,6 +25,12 @@ outcome(
 \item{p_avoidance}{desc}
 
 \item{p_lethality}{desc}
+
+\item{km}{desc}
+
+\item{verbose}{desc}
+
+\item{interations}{desc}
 }
 \value{
 

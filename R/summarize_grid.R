@@ -25,34 +25,45 @@
 #'
 summarize_grid <- function(vgrid){
 
-  head(vgrid)
-  vgrid$month <- lubridate::month(vgrid$datetime)
+  suppressMessages({
+    head(vgrid)
+    vgrid$month <- lubridate::month(vgrid$datetime)
 
-  # Slot grid
-  vsumm <-
-    vgrid %>%
-    dplyr::group_by(type, month, diel, grid_id) %>%
-    dplyr::summarize(x = x[1],
-                     y= y[1],
-                     n = dplyr::n(),
-                     #vid = paste(vid, collapse='_'),
-                     speed = paste(round(speed,1), collapse='_'),
-                     length = paste(round(length,1), collapse='_'),
-                     width = paste(round(width,1), collapse='_'),
-                     draft = paste(round(draft,1), collapse='_'))
+    # Slot grid
+    vsumm <-
+      vgrid %>%
+      dplyr::group_by(type, month, diel, grid_id) %>%
+      dplyr::summarize(x = x[1],
+                       y= y[1],
+                       n = dplyr::n(),
+                       #vid = paste(vid, collapse='_'),
+                       speed = paste(round(speed,1), collapse='_'),
+                       length = paste(round(length,1), collapse='_'),
+                       width = paste(round(width,1), collapse='_'),
+                       draft = paste(round(draft,1), collapse='_'))
 
-  # Slot params.ship
-  params.ship <- apply(vsumm, 1, function(vsummi){
-    vsummi <- vsummi %>% as.character
-    (speeds <- stringr::str_split(vsummi[8],'_') %>% unlist %>% as.numeric)
-    (lengths <- stringr::str_split(vsummi[9],'_') %>% unlist %>% as.numeric)
-    (widths <- stringr::str_split(vsummi[10],'_') %>% unlist %>% as.numeric)
-    dfi <- data.frame(v.ship = speeds, l.ship = lengths, w.ship = widths)
-    return(dfi)
-  })
-  params.ship <- bind_rows(params.ship)
+    # Slot params.ship
+    params.ship <- apply(vsumm, 1, function(vsummi){
+      vsummi <- vsummi %>% as.character
+      (speeds <- stringr::str_split(vsummi[8],'_') %>% unlist %>% as.numeric)
+      (lengths <- stringr::str_split(vsummi[9],'_') %>% unlist %>% as.numeric)
+      (widths <- stringr::str_split(vsummi[10],'_') %>% unlist %>% as.numeric)
+      dfi <- data.frame(v.ship = speeds, l.ship = lengths, w.ship = widths)
+      return(dfi)
+    })
+    params.ship <- bind_rows(params.ship)
 
-  return_list <- list(grid = vsumm, params.ship = params.ship)
+
+    # Slot grids_crossed (km traveled)
+    km_sum <- vgrid %>%
+      dplyr::group_by(type, vid) %>%
+      dplyr::summarize(km = sum(km, na.rm=TRUE))
+    #km_sum$km %>% hist
+    (km <- km_sum$km %>% sum %>% round)
+
+  }) # end of suppressmessages
+
+  return_list <- list(grid = vsumm, params.ship = params.ship, km = km)
 
   return(return_list)
 }

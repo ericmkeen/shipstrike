@@ -18,6 +18,10 @@
 #' \item `datetime` = Datetime in UTC, with format `yyyy-mm-dd hh:mm:ss`
 #' \item `x` = Longitude, decimal degrees (Western degrees negative)
 #' \item `y` = Latitude, decimal degrees (Southern degrees negative)
+#' \item `km`= The distance traveled (km) in this interpolated segment
+#' \item `year` = Numeric year
+#' \item `month` = Numeric month (1-12)
+#' \item `yday` = Numerical day of year
 #' }
 #' @param toplot A Boolean; if `TRUE`, progress plots will be shown.
 #' @param verbose A Boolean; if `TRUE`, updates will be printed to the Console.
@@ -151,8 +155,12 @@ vessel_grid <- function(grids,
                 dplyr::summarize(across(vid:draft,unique),
                                  datetime = mean(datetime),
                                  x = x[1],
-                                 y = y[1]) %>%
-                arrange(datetime)
+                                 y = y[1],
+                                 km = sum(km)) %>%
+                arrange(datetime) %>%
+                mutate(year = lubridate::year(datetime),
+                       month = lubridate::month(datetime),
+                       yday = lubridate::yday(datetime))
               nrow(xyint)
             })
 
