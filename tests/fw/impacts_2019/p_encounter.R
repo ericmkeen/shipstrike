@@ -2,6 +2,10 @@
 # p(encounter) - 2019 AIS traffic
 ################################################################################
 
+library(dplyr)
+library(devtools)
+document()
+
 source('tests/fw/parameters.R')
 vessels_2019 <- readRDS('tests/vessels_2019.RData')
 head(vessels_2019)
@@ -94,15 +98,12 @@ for(channi in channels){
               (p_encounter <- encs / b)
 
               # Add to building dataset
-              (resulti <- data.frame(channel = channi, type = typi, month = monthi, diel = dieli, p_encounter))
+              (resulti <- data.frame(channel = channi, type = typi, month = monthi, diel = dieli, i = i, p_encounter))
               results <- rbind(results, resulti)
 
               # Save copy of data
-              save(results, file='tests/p_encounter.RData')
+              saveRDS(results, file='tests/fw/impacts_2019/p_encounter.RData')
 
-              # Update plot
-              #par(mar=c(4.3,4.2,3,.5))
-              #results$p_encounter %>% hist(main=paste0('After month ',monthi,': ',dieli,': iteration ',i), xlab = 'Encounter rate', breaks=20)
             } # end of encounters B loop
             message('\nEncounter rates: ',paste(results$p_encounter[results$month == monthi & results$diel == dieli], collapse=', '))
             par(mfrow=c(1,1))
