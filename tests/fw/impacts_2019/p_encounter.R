@@ -20,12 +20,12 @@ b <- 100 # number of iterations in each run
 results <- data.frame()
 
 # Loop through each channel
-(channels <- vessels_2019$channel %>% unique)
+(channels <- vessels_2019$channel %>% unique  %>%  rev)
 channi <- 'SQU'
 for(channi in channels){
 
   # Loop through each vessel type
-  (types <- vessels_2019$type %>% unique)
+  (types <- vessels_2019$type %>% unique %>% sort)
   typi <- 'Tug'
   for(typi in types){
 
@@ -102,7 +102,8 @@ for(channi in channels){
               results <- rbind(results, resulti)
 
               # Save copy of data
-              saveRDS(results, file='tests/fw/impacts_2019/p_encounter.RData')
+              (fni <- paste0('tests/fw/impacts_2019/Pencounter_',typi,'_',channi,'.RData'))
+              saveRDS(results, file = fni)
 
             } # end of encounters B loop
             message('\nEncounter rates: ',paste(results$p_encounter[results$month == monthi & results$diel == dieli], collapse=', '))
