@@ -17,6 +17,6 @@ library(shipstrike)
 ?shipstrike
 ```
 
-Check out the demo to see how it works.
+Check out [the demo](https://ericmkeen.github.io/shipstrike/) to see how it works.
 
 
