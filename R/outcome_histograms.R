@@ -12,13 +12,13 @@ outcome_histograms <- function(results){
 
   df1 <- data.frame(Outcome = 'Co-occurrence', events = results$cooccurrence)
   df2 <- data.frame(Outcome = 'Close encounter', events = results$encounter)
-  df3 <- data.frame(Outcome = 'Surface overlap', events = results$surface)
+  df3 <- data.frame(Outcome = 'Strike zone', events = results$surface)
   df4 <- data.frame(Outcome = 'Collision', events = results$collision)
   df5 <- data.frame(Outcome = 'Mortality', events = results$mortality)
   df <- rbind(df1, df2, df3, df4, df5)
   df$facet = factor(df$Outcome, levels = c("Co-occurrence",
                                         "Close encounter",
-                                        "Surface overlap",
+                                        "Strike zone",
                                         "Collision",
                                         "Mortality"))
 

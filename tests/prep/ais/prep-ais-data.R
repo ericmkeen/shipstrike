@@ -9,6 +9,7 @@ library(dplyr)
 library(bangarang)
 library(devtools)
 library(lubridate)
+library(ggplot2)
 
 document()
 
@@ -71,41 +72,27 @@ head(ais$datetime)
 head(ais)
 
 # Fix invalid beams
-which(is.na(ais$width))
+(bads <- which(ais$width < 2))
+ais$width[bads] <- NA
+(bads <- which(is.na(ais$width)))
+if(length(bads)>0){ais$width[bads] <- ais$length[bads] * 0.125}
 plot(width ~ length, data=ais, pch=16, cex=.5)
-# none look invalid
 
 # Find invalid drafts
 # any draft 50% of length or deeper is invalid
 ld_ratio <- ais$draft / ais$length
 max(ld_ratio, na.rm=TRUE)
-bads <- which(ld_ratio > 0.5)
-ais$draft[bads] <- NA
-(bads <- which(is.na(ais$draft))) %>% length
+(bads <- which(ld_ratio > 0.5))
+if(length(bads)>0){ais$draft[bads] <- NA}
+(bads <- which(ais$draft < .2))
+if(length(bads)>0){ais$draft[bads] <- NA}
 
 # Fix invalid drafts
 # Use a 1-to-0.05 ratio
-ais$draft[bads] <- ais$length[bads] * 0.05
+(bads <- which(is.na(ais$draft))) %>% length
+if(length(bads)>0){ais$draft[bads] <- ais$length[bads] * 0.05}
 plot(draft ~ length, data=ais, pch=16, cex=.5)
 
-
-################################################################################
-################################################################################
-# Assign AIS to provinces
-
-#data('channels', package='bangarang')
-#head(channels)
-#channels$province %>% table
-#plotKFS()
-#lines(x=channels$X[channels$province=='nsq'],
-#       y=channels$Y[channels$province=='nsq'])
-#
-#(blox <- channels$province %>% unique)
-#i=1
-#for(i in 1:length(blox)){
-#  (bloxi <- blox[i])
-#
-#}
 
 ################################################################################
 ################################################################################
@@ -132,27 +119,41 @@ ais_table <-
 
 ais_table %>% View
 
+# Group into fewer categories
+
 ais$type %>% table
 (types <- ais$type %>% unique)
 
-newtype <- rep('Other',times=nrow(ais))
-newtype[ais$type %in% types[c(1, 12, 20)]] <- 'Government'
-newtype[ais$type %in% types[c(11, 19)]] <- 'Pilot/Port'
-newtype[ais$type %in% types[c(4, 7)]] <- 'Towing'
-newtype[ais$type %in% types[c(3)]] <- 'Tug'
-newtype[ais$type %in% types[c(2, 17)]] <- 'Passenger < 100m'
+newtype <- rep('Other < 40m',times=nrow(ais))
+newtype[ais$length > 40] <- 'Other > 40m'
+newtype[ais$type %in% types[c(9)] & ais$length < 40] <- 'Pleasurecraft < 40m'
+newtype[ais$type %in% types[c(4, 7)] & ais$length < 50] <- 'Towing < 50m'
+newtype[ais$type %in% types[c(3)] & ais$length < 50] <- 'Tug < 50m'
 newtype[ais$type %in% types[c(2, 17)] & ais$length >= 100] <- 'Passenger > 100m'
-newtype[ais$type %in% types[c(5, 21)]] <- 'Cargo < 100m'
 newtype[ais$type %in% types[c(5, 21)] & ais$length >= 100] <- 'Cargo > 100m'
-newtype[ais$type %in% types[c(14)]] <- 'Tanker < 100m'
 newtype[ais$type %in% types[c(14)] & ais$length >= 100] <- 'Tanker > 100m'
 newtype[ais$type %in% types[c(13)]] <- 'Sailing'
-newtype[ais$type %in% types[c(6)]] <- 'Fishing'
+newtype[ais$type %in% types[c(6)] & ais$length < 60] <- 'Fishing < 60m'
 
 newtype %>% table
 
 # Update with new type categories
 ais$type <- newtype
+
+# Plot vessel characteristics
+ggplot(ais, aes(x=length)) +
+  geom_histogram() +
+  facet_wrap(~type, scales='free') +
+  ylab('AIS records') +
+  xlab('Reported length (m)') +
+  labs(title = 'Lengths (meters) for 2019 vessel types used in analysis')
+
+ggplot(ais, aes(x=speed)) +
+  geom_histogram() +
+  facet_wrap(~type, scales='free') +
+  ylab('AIS records') +
+  xlab('Reported speed (knots)') +
+  labs(title = 'Speed (knots) for 2019 vessel types used in analysis')
 
 # Update table
 ais_table <-
@@ -193,7 +194,7 @@ vgrid2$channel %>% table
 # Add sun angles
 vgrid2$sun <- vessel_sun_angle(vgrid2, verbose=TRUE)
 vgrid2$diel <- 'day'
-vgrid2$diel[vgrid2$sun < 0] <- 'night'
+vgrid2$diel[vgrid2$sun < -12] <- 'night' # nautical dawn/dusk
 vgrid2$diel %>% table
 
 ################################################################################

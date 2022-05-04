@@ -8,7 +8,8 @@
 outcome_table <- function(results){
   summs <- data.frame() ; i=1
   for(i in 1:ncol(results)){
-    coli <- results[,i]
+    (coli <- results[,i] %>% as.data.frame)
+    (coli <- coli[,1] %>% as.numeric)
     (nami <- names(results)[i])
     summi <- data.frame(impact = nami,
                         mean = mean(coli) %>% round,
