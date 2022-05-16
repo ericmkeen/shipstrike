@@ -74,7 +74,7 @@ head(ais)
 # Fix invalid beams
 (bads <- which(ais$width < 2))
 ais$width[bads] <- NA
-(bads <- which(is.na(ais$width)))
+(bads <- which(is.na(ais$width))) %>% length
 if(length(bads)>0){ais$width[bads] <- ais$length[bads] * 0.125}
 plot(width ~ length, data=ais, pch=16, cex=.5)
 
@@ -82,9 +82,9 @@ plot(width ~ length, data=ais, pch=16, cex=.5)
 # any draft 50% of length or deeper is invalid
 ld_ratio <- ais$draft / ais$length
 max(ld_ratio, na.rm=TRUE)
-(bads <- which(ld_ratio > 0.5))
+(bads <- which(ld_ratio > 0.5)) %>% length
 if(length(bads)>0){ais$draft[bads] <- NA}
-(bads <- which(ais$draft < .2))
+(bads <- which(ais$draft < .2)) %>% length
 if(length(bads)>0){ais$draft[bads] <- NA}
 
 # Fix invalid drafts
@@ -93,6 +93,8 @@ if(length(bads)>0){ais$draft[bads] <- NA}
 if(length(bads)>0){ais$draft[bads] <- ais$length[bads] * 0.05}
 plot(draft ~ length, data=ais, pch=16, cex=.5)
 
+
+(1184 + 118838) / nrow(ais)
 
 ################################################################################
 ################################################################################
@@ -108,14 +110,22 @@ ais_table <-
   summarize(vids = unique(vid) %>% length,
             fixes = n(),
             dates = lubridate::yday(datetime) %>% unique %>% length,
-            transits_per_day = round(dates / 365, 2),
-            speed_mean = mean(speed, na.rm=TRUE) %>% round(1),
+            daily_transits = round(dates / 365, 2),
+            speed_mn = mean(speed, na.rm=TRUE) %>% round(1),
             speed_sd = sd(speed, na.rm=TRUE) %>% round(1),
             speed_max = max(speed, na.rm=TRUE) %>% round(1),
-            length_mean = mean(length, na.rm=TRUE) %>% round(),
+            length_mn = mean(length, na.rm=TRUE) %>% round(),
             length_sd = sd(length, na.rm=TRUE) %>% round(),
             length_min = min(length, na.rm=TRUE) %>% round(),
-            length_max = max(length, na.rm=TRUE) %>% round())
+            length_max = max(length, na.rm=TRUE) %>% round(),
+            beam_mn = mean(width, na.rm=TRUE) %>% round(),
+            beam_sd = sd(width, na.rm=TRUE) %>% round(),
+            beam_min = min(width, na.rm=TRUE) %>% round(),
+            beam_max = max(width, na.rm=TRUE) %>% round(),
+            draft_mn = mean(draft, na.rm=TRUE) %>% round(1),
+            draft_sd = sd(draft, na.rm=TRUE) %>% round(1),
+            draft_min = min(draft, na.rm=TRUE) %>% round(1),
+            draft_max = max(draft, na.rm=TRUE) %>% round(1))
 
 ais_table %>% View
 
@@ -162,14 +172,22 @@ ais_table <-
   summarize(vids = unique(vid) %>% length,
             fixes = n(),
             dates = lubridate::yday(datetime) %>% unique %>% length,
-            transits_per_day = round(dates / 365, 2),
+            daily_transits = round(dates / 365, 2),
             speed_mean = mean(speed, na.rm=TRUE) %>% round(1),
             speed_sd = sd(speed, na.rm=TRUE) %>% round(1),
             speed_max = max(speed, na.rm=TRUE) %>% round(1),
             length_mean = mean(length, na.rm=TRUE) %>% round(),
             length_sd = sd(length, na.rm=TRUE) %>% round(),
             length_min = min(length, na.rm=TRUE) %>% round(),
-            length_max = max(length, na.rm=TRUE) %>% round())
+            length_max = max(length, na.rm=TRUE) %>% round(),
+            beam_mean = mean(width, na.rm=TRUE) %>% round(),
+            beam_sd = sd(width, na.rm=TRUE) %>% round(),
+            beam_min = min(width, na.rm=TRUE) %>% round(),
+            beam_max = max(width, na.rm=TRUE) %>% round(),
+            draft_mean = mean(draft, na.rm=TRUE) %>% round(1),
+            draft_sd = sd(draft, na.rm=TRUE) %>% round(1),
+            draft_min = min(draft, na.rm=TRUE) %>% round(1),
+            draft_max = max(draft, na.rm=TRUE) %>% round(1))
 
 ais_table %>% View
 

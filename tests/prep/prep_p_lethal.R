@@ -29,20 +29,20 @@ fitlog <- function(v1, p1, v2, p2, asymptote = 0.8){
 #"Other > 40m"         "Passenger > 100m"    "Tug < 50m"           "Towing < 50m"        "Cargo > 100m"
 #"Fishing < 60m"       "Other < 40m"         "Pleasurecraft < 40m" "Sailing"             "Tanker > 100m"
 
-asymptote <- 0.7
+asymptote <- 0.9
 
 (df1 <-
     data.frame(type = 'Pleasurecraft < 40m | Other < 40m | Sailing',
                fitlog(v1 = 16, p1 = 0.5*asymptote,
-                      v2 = 21, p2 = 0.8*asymptote, asymptote = asymptote)))
+                      v2 = 22, p2 = 0.8*asymptote, asymptote = asymptote)))
 
-asymptote <- 0.8
+asymptote <- 1
 
 (df2 <-
     data.frame(type = 'Tug < 50m | Towing < 50m',
                #tonnage = 15,  # 18m yacht
                fitlog(v1 = 10, p1 = 0.5*asymptote,
-                      v2 = 15, p2 = 0.8*asymptote, asymptote = asymptote)))
+                      v2 = 16, p2 = 0.8*asymptote, asymptote = asymptote)))
 
 (df3 <-
     data.frame(type = 'Fishing < 60m | Other > 40m',

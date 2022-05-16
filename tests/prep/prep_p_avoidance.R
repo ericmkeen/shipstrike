@@ -5,9 +5,6 @@ collides <-  (.9 / (1 + exp(-0.5*(speeds - 11.8))))
 plot(collides~speeds, ylim=c(0,1))
 abline(h=.5, v=11.8)
 
-mr$p_collision2 <- (1 / (1 + exp(-0.5*(mr$speed - 11.8))))
-
-
 fitlog <- function(v1, p1, v2, p2, asymptote = 1){
   #v1 = 11.8; p1 = 0.5; v2 = 20; p2 = 0.95
   speeds <- seq(0,30,length=1000)
@@ -40,7 +37,7 @@ fitlog <- function(v1, p1, v2, p2, asymptote = 1){
 
 # With asymptote of 1
 
-asymptote = .8 #0.8
+asymptote = 1
 
 (df4 <-
     data.frame(type = 'Cargo > 100m | Passenger > 100m | Tanker > 100m',

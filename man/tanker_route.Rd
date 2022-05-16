@@ -5,7 +5,7 @@
 \alias{tanker_route}
 \title{Tanker route}
 \format{
-An object of class \code{data.frame} with 82 rows and 2 columns.
+An object of class \code{data.frame} with 920 rows and 2 columns.
 }
 \usage{
 tanker_route
