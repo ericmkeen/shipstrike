@@ -20,21 +20,22 @@ document()
 outcome_dir <- c('tests/fw/impacts_2019/outcomes/')
 MR <- compile_results(outcome_dir)
 
+# 2030 only ====================================================================
+outcome_dir <- c('tests/fw/impacts_2030/outcomes/')
+MR <- compile_results(outcome_dir)
+
 # LNG Canada only (probable case: variable speed, 8 - 14 knots) ) ==============
 outcome_dir <- c('tests/fw/impacts_lng_canada/8_14_knots/outcomes/')
 MR <- compile_results(outcome_dir)
 
-# LNG Canada only (best case: knots as proposed) ) =============================
-outcome_dir <- c('tests/fw/impacts_lng_canada/proposed_speed/outcomes/')
+# Cedar LNG only (probable case: variable speed, 8 - 14 knots) ) ==============
+outcome_dir <- c('tests/fw/impacts_cedar_lng/8_14_knots/outcomes/')
 MR <- compile_results(outcome_dir)
 
-# LNG Canada only (worst case: constant 12 knots) ) ============================
-#outcome_dir <- c('tests/fw/impacts_lng_canada/12_knots/outcomes/')
-#MR <- compile_results(outcome_dir)
-
 # 2030 (2019 + LNG Canada probable case) =======================================
-outcome_dir <- c('tests/fw/impacts_2019/outcomes/',
-                 'tests/fw/impacts_lng_canada/8_14_knots/outcomes/')
+outcome_dir <- c('tests/fw/impacts_2030/outcomes/',
+                 'tests/fw/impacts_lng_canada/8_14_knots/outcomes/',
+                 'tests/fw/impacts_cedar_lng/8_14_knots/outcomes/')
 MR <- compile_results(outcome_dir)
 
 

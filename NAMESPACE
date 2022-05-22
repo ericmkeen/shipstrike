@@ -3,6 +3,7 @@
 export(compile_results)
 export(encounter_simulator)
 export(encounter_tally)
+export(encounter_wrapper)
 export(get_seafloor)
 export(make_grid)
 export(outcome)

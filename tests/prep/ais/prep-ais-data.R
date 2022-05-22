@@ -221,5 +221,5 @@ vgrid2$diel %>% table
 # Save output
 saveRDS(vgrid2, file='tests/vessels_2019.RData')
 
-
-
+#vess <- readRDS('tests/vessels_2019.RData')
+#head(vess)

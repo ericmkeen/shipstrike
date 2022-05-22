@@ -31,6 +31,7 @@ surface <- readRDS('tests/fw/p_surface.RData')
 
 # Traffic
 traffic <- readRDS('tests/vessels_2019.RData')
+(vessels <- unique(traffic$type))
 
 # Encounter rate
 p_encounter_dir <- 'tests/fw/impacts_2019/p_encounter/'
@@ -49,6 +50,7 @@ lethality
 # Run outcome predictions ======================================================
 
 predict_outcomes(traffic,
+                 scale_factors=NULL,
                  whale,
                  seasonal,
                  p_encounter_dir,
@@ -61,79 +63,36 @@ predict_outcomes(traffic,
 
 ################################################################################
 ################################################################################
-# LNG Canada - best case (7 - 9 knots, as proposed)
+# 2030 traffic -- scaled (vessel type specific) from 2019
 
 # Prep datasets ================================================================
 
 # Traffic
-traffic <- readRDS('tests/vessels_lng_canada.RData')
+traffic <- readRDS('tests/vessels_2019.RData')
+(vessels <- unique(traffic$type))
+
+# Scaling factor
+scale_factors <- readRDS('tests/vessel_trends.RData')
+scale_factors
 
 # Encounter rate
-p_encounter_dir <- 'tests/fw/impacts_lng_canada/proposed_speed/p_encounter/'
+p_encounter_dir <- 'tests/fw/impacts_2019/p_encounter/'
 
 # Output directory
-outcome_dir <- 'tests/fw/impacts_lng_canada/proposed_speed/outcomes/'
+outcome_dir <- 'tests/fw/impacts_2030/outcomes/'
 
 # Avoidance
 avoidance <- readRDS('tests/p_avoidance.RData')
 avoidance
-(avoidance <- avoidance[c(2,4),])
-(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
-                     paste(vessels[1:2], collapse=' | ')))
-avoidance
 
 # Lethality
 lethality <- readRDS('tests/p_lethal.RData')
-(lethality <- lethality[c(2,4),])
-(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
-                     paste(vessels[1:2], collapse=' | ')))
 lethality
 
 # Run outcome predictions ======================================================
 
 predict_outcomes(traffic,
-                 whale,
-                 seasonal,
-                 p_encounter_dir,
-                 surface,
-                 avoidance,
-                 lethality,
-                 outcome_dir,
-                 iterations = 1000)
-
-
-################################################################################
-################################################################################
-# LNG Canada - worst case (flat 12 kn always)
-
-# Prep datasets ================================================================
-
-# Traffic
-traffic <- readRDS('tests/vessels_lng_canada_12knots.RData')
-
-# Encounter rate
-p_encounter_dir <- 'tests/fw/impacts_lng_canada/12_knots/p_encounter/'
-
-# Output directory
-outcome_dir <- 'tests/fw/impacts_lng_canada/12_knots/outcomes/'
-
-# Avoidance
-avoidance <- readRDS('tests/p_avoidance.RData')
-(avoidance <- avoidance[c(2,4),])
-(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
-                     paste(vessels[1:2], collapse=' | ')))
-avoidance
-
-# Lethality
-lethality <- readRDS('tests/p_lethal.RData')
-(lethality <- lethality[c(2,4),])
-(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
-                     paste(vessels[1:2], collapse=' | ')))
-lethality
-
-# Run outcome predictions ======================================================
-
-predict_outcomes(traffic,
+                 scale_factors,
                  whale,
                  seasonal,
                  p_encounter_dir,
@@ -152,12 +111,58 @@ predict_outcomes(traffic,
 
 # Traffic
 traffic <- readRDS('tests/vessels_lng_canada_8_14knots.RData')
+(vessels <- unique(traffic$type))
 
 # Encounter rate
 p_encounter_dir <- 'tests/fw/impacts_lng_canada/8_14_knots/p_encounter/'
 
 # Output directory
 outcome_dir <- 'tests/fw/impacts_lng_canada/8_14_knots/outcomes/'
+
+# Avoidance
+(avoidance <- readRDS('tests/p_avoidance.RData'))
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+avoidance
+
+# Lethality
+lethality <- readRDS('tests/p_lethal.RData')
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+lethality
+
+# Run outcome predictions ======================================================
+
+predict_outcomes(traffic,
+                 scale_factors=NULL,
+                 whale,
+                 seasonal,
+                 p_encounter_dir,
+                 surface,
+                 avoidance,
+                 lethality,
+                 outcome_dir,
+                 iterations = 1000)
+
+
+################################################################################
+################################################################################
+# Cedar LNG - probable case (8 - 14 knots)
+
+# Prep datasets ================================================================
+
+# Traffic
+traffic <- readRDS('tests/vessels_cedar_lng_8_14knots.RData')
+(vessels <- unique(traffic$type))
+
+# Encounter rate
+# (just copied LNG Canada, since ship characteristics are the exact same)
+p_encounter_dir <- 'tests/fw/impacts_cedar_lng/8_14_knots/p_encounter/'
+
+# Output directory
+outcome_dir <- 'tests/fw/impacts_cedar_lng/8_14_knots/outcomes/'
 
 # Avoidance
 avoidance <- readRDS('tests/p_avoidance.RData')
@@ -176,6 +181,7 @@ lethality
 # Run outcome predictions ======================================================
 
 predict_outcomes(traffic,
+                 scale_factors=NULL,
                  whale,
                  seasonal,
                  p_encounter_dir,
@@ -184,5 +190,4 @@ predict_outcomes(traffic,
                  lethality,
                  outcome_dir,
                  iterations = 1000)
-
 

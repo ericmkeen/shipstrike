@@ -1,6 +1,7 @@
 #' Predict whale-ship interaction outcomes
 #'
 #' @param traffic desc
+#' @param scale_factors
 #' @param whale desc
 #' @param seasonal desc
 #' @param p_encounter_dir desc
@@ -14,6 +15,7 @@
 #' @export
 #'
 predict_outcomes <- function(traffic,
+                             scale_factors = NULL,
                              whale,
                              seasonal,
                              p_encounter_dir,
@@ -101,6 +103,7 @@ predict_outcomes <- function(traffic,
   boots <- whale
   avoid <- avoidance
   lethal <- lethality
+  surf <- surface
 
   # Encounter rate file list
   (pencs <- list.files(p_encounter_dir))
@@ -114,9 +117,9 @@ predict_outcomes <- function(traffic,
 
   months <- 1:12
   diels <- c('day','night')
-  chi <- 1
-  vi <- 9
-  mi <- 1
+  chi <- 6
+  vi <- 8
+  mi <- 5
   di <- 2
 
   for(chi in 1:length(channels)){
@@ -139,11 +142,24 @@ predict_outcomes <- function(traffic,
                            month == monthi,
                            diel == dieli)) %>% head
 
+          scale_factor <- 1
+          if(!is.null(scale_factors)){
+            (sfi <- scale_factors %>% dplyr::filter(type == vessi))
+            if(nrow(sfi)>0){
+              scale_factor <- sfi$scale_factor
+            }else{
+              stop('This vessel type was not found in the `scale_factors` dataframe!')
+            }
+          }
+          scale_factor
+
           # Begin iterations  ====================================================
           message('\n========== Channel ',channi,' :: Vessel type ',vessi,' :: Month ',monthi,' :: Diel period ',dieli,' ==========\n')
           mr <- data.frame()
 
           # Get scenario-specific probabilities   ================================
+
+          (booti <- boots %>% dplyr::filter(month %in% c(0, monthi))) %>% head
 
           (p_seasonal <- seasonal %>% dplyr::filter(month == monthi)) %>% head
           p_seasonal <- p_seasonal$scaled
@@ -172,32 +188,58 @@ predict_outcomes <- function(traffic,
           # Co-occurrence ======================================================
           message('------ co-occurrences ...')
 
-          if(nrow(traffi)>0){
+          if(nrow(traffi) > 0 & scale_factor > 0){
+
             traffi %>% head
             traffi %>% nrow
 
             # Get grid cells transited
             (grid_cells <- traffi$grid_id)
+            length(grid_cells)
 
-            i=1
-            pb <- txtProgressBar(1, max(c(2,length(grid_cells))), style=3) # setup progress bar
-            # Loop through each grid cell
-            for(i in 1:length(grid_cells)){
-              (gi <- grid_cells[i])
-
-              # Get B iterations of bootstrapped whale density for this grid cell
-              (d_whale <- boots %>% dplyr::filter(grid_id == gi)) %>% head
-              (dwi <- sample(d_whale$D, size=iterations, replace=TRUE))
-              # treat negatives as 0
-
-              # Add to results dataframe
-              mri <- data.frame(grid_id = gi, iteration = 1:iterations, d_whale = dwi)
-              mr <- rbind(mr, mri)
-              setTxtProgressBar(pb, i)
+            # Handle scale factor
+            scale_factor
+            (new_grid_n <- round(length(grid_cells) * scale_factor))
+            if(scale_factor > 1){
+              (new_cells_needed <- new_grid_n - length(grid_cells))
+              if(length(new_cells_needed)>0){
+                (new_cells <- sample(grid_cells, size=new_cells_needed, replace=TRUE))
+                grid_cells <- c(grid_cells, new_cells)
+              }
             }
-            mr %>% nrow
-            mr %>% head
+            if(scale_factor < 1){
+              (n_cells_to_remove <- length(grid_cells) - new_grid_n)
+              if(length(n_cells_to_remove)>0){
+                (bad_cells <- sample(1:length(grid_cells), size=n_cells_to_remove, replace=TRUE))
+                grid_cells <- grid_cells[- bad_cells]
+              }
+            }
+            length(grid_cells)
 
+            if(length(grid_cells)>1){
+              i=1
+              pb <- txtProgressBar(1, max(c(2,length(grid_cells))), style=3) # setup progress bar
+              # Loop through each grid cell
+              for(i in 1:length(grid_cells)){
+                (gi <- grid_cells[i])
+
+                # Get B iterations of bootstrapped whale density for this grid cell
+                (d_whale <- booti %>% dplyr::filter(grid_id == gi)) %>% head
+                (d_whaleg <- d_whale$D)
+                if(length(d_whaleg)==0){d_whaleg <- 0}
+                (dwi <- sample(d_whaleg, size=iterations, replace=TRUE))
+                # treat negatives as 0
+
+                # Add to results dataframe
+                mri <- data.frame(grid_id = gi, iteration = 1:iterations, d_whale = dwi)
+                mr <- rbind(mr, mri)
+                setTxtProgressBar(pb, i)
+              }
+              mr %>% nrow
+              mr %>% head
+          }else{
+              mr <- data.frame(grid_id = grid_cells[1], iteration = 1:iterations, d_whale = -1)
+          }
           }else{
             message('------   No vessel traffic for this channel-type-month-diel scenario!')
             mr <- data.frame(grid_id = NA, iteration = 1:iterations, d_whale = -1)

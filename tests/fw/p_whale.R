@@ -18,18 +18,67 @@ library(bangarang)
 segments <- read.csv('tests/bangarang_segments.csv',stringsAsFactors=FALSE)
 head(segments)
 segments$Effort %>% mean
+segments$Effort %>% sum
 segments$Effort[segments$Effort < 10] %>% sum
 segments %>% dplyr::group_by(year) %>% dplyr::summarize(km = sum(Effort[Effort < 10]))
 nrow(segments)
 
+# Summarize effort
+segments %>%
+  dplyr::group_by(year) %>%
+  dplyr::summarize(n = n(),
+                   km = sum(Effort),
+                   km10 = sum(Effort[Effort < 10]))
+
+################################################################################
 sightings <- read.csv('tests/bangarang_sightings.csv',stringsAsFactors=FALSE)
 head(sightings)
+nrow(segments)
+
+# Summarize sightings
+sightings %>%
+  dplyr::mutate(year = lubridate::year(datetime)) %>%
+  dplyr::group_by(year, spp) %>%
+  dplyr::summarize(n_tot = n(),
+                   n_valid = length(which(!is.na(distance)))) %>%
+  group_by(spp) #%>%
+  #summarize(n_tot = sum(n_tot),
+  #          n_valid = sum(n_valid))
+
 
 # Sanity check
 segs <- sightings$seg_id[sightings$spp %in% c('FW','BW')]
 segs <- segments %>% dplyr::filter(Sample.Label %in% segs)
 plotKFS()
 points(x=segs$x, y=segs$y)
+
+# Nice plot
+pdf('tests/figs/lta/effort.pdf', width=6, height=9)
+plotKFS()
+points(x=segments$x, y=segments$y, cex=.7, pch=16, col=adjustcolor('black', alpha.f = .4))
+dev.off()
+
+pdf('tests/figs/lta/fw.pdf', width=6, height=9)
+plotKFS()
+fw <- sightings %>% dplyr::filter(spp=='FW')
+points(x=fw$x, y=fw$y, cex=sqrt(fw$size), pch=16, col=adjustcolor('darkblue',alpha.f=.6))
+dev.off()
+
+pdf('tests/figs/lta/hw.pdf', width=6, height=9)
+plotKFS()
+hw <- sightings %>% dplyr::filter(spp=='HW')
+points(x=hw$x, y=hw$y, cex=sqrt(hw$size), pch=16, col=adjustcolor('darkblue',alpha.f=.6))
+dev.off()
+
+pdf('tests/figs/lta/key.pdf', width=6, height=9)
+plotKFS()
+points(x=rep(-129.6, times=4),
+       y=seq(52.82, 52.92, length=4),
+       cex = sqrt(c(1,2,4,10)),
+       pch=16, col=adjustcolor('darkblue',alpha.f=.6))
+dev.off()
+
+################################################################################
 
 # Format region labels
 segments <- segments %>% dplyr::filter(block != '')

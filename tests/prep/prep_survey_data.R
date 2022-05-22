@@ -9,9 +9,13 @@
 
 ################################################################################
 # Bring in detailed effort
-load('tests/lta/effort13.RData')
-load('tests/lta/effort14.RData')
-load('tests/lta/effort15.RData')
+load('tests/prep/lta/effort13.RData')
+load('tests/prep/lta/effort14.RData')
+load('tests/prep/lta/effort15.RData')
+
+eff <- rbind(effort13, effort14, effort15)
+head(effort13)
+head(effort14)
 
 # Bring in effort summary
 head(eff)

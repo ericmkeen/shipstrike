@@ -6,6 +6,7 @@
 \usage{
 predict_outcomes(
   traffic,
+  scale_factors = NULL,
   whale,
   seasonal,
   p_encounter_dir,

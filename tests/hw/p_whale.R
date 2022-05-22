@@ -10,7 +10,9 @@ library(raster)
 library(spatstat.geom)
 library(data.table)
 library(bangarang)
-library(gstat)
+library(devtools)
+#install_github('r-spatial/gstat')
+#library(gstat)
 
 ################################################################################
 ################################################################################
@@ -55,7 +57,7 @@ sightings$doy <- lubridate::yday(sightings$datetime)
 sightings %>% head
 (data_table <-
     sightings %>%
-    dplyr::filter(spp %in% c('HW','BW')) %>%
+    dplyr::filter(spp %in% c('HW')) %>%
     dplyr::transmute(distance = distance,
                      size = size,
                      Sample.Label = seg_id,
@@ -102,7 +104,6 @@ dso3 <- Distance::ds(data = data_table, truncation = 2.7,
                      adjustment = NULL, key = 'hn', quiet=FALSE)
 
 Distance::summarize_ds_models(dso1, dso2, dso3)
-Distance::summarize_ds_models(dso1)
 
 save(dso1, dso2, dso3, file='tests/hw/ds-models.RData')
 
@@ -142,6 +143,8 @@ plot(zsd ~ zrange, data=sample_table)
 plot(z ~ zrange, data=sample_table) # not correlated
 
 # Round 1 model fitting
+dsm1.xyd_interaction <- dsm(density.est~s(x,y,doy), dso_keep, sample_table, data_table, family=tw(), method="REML")
+AIC(dsm1.xyd_interaction)
 
 dsm1.xy <- dsm(density.est~s(x,y), dso_keep, sample_table, data_table, family=tw(), method="REML")
 summary(dsm1.xy)
@@ -179,6 +182,7 @@ vis.gam(dsm1.xyb, plot.type="contour", view=c("x","y"), asp=1, type="response", 
 par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm1.xyb) ; par(mfrow=c(1,1))
 AIC(dsm1.xyb)
 
+dsm1.xyd_interaction %>% AIC
 dsm1.xyd %>% AIC # DO use day of year
 dsm1.xyzrange %>% AIC
 dsm1.xyb %>% AIC
@@ -187,90 +191,46 @@ dsm1.xyy %>% AIC
 dsm1.xy %>% AIC
 
 # Round 2
-dsm2.z <- dsm(density.est~s(x,y) + s(doy) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm2.z)
-vis.gam(dsm2.z, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.z) ; par(mfrow=c(1,1))
-AIC(dsm2.z)
+dsm2.z <- dsm(density.est~s(x,y,doy) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
+dsm2.zrange <- dsm(density.est~s(x,y,doy) + s(zrange), dso_keep, sample_table, data_table, family=tw(), method="REML")
+dsm2.y <- dsm(density.est~s(x,y,doy) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
 
-dsm2.zrange <- dsm(density.est~s(x,y) + s(doy) + s(zrange), dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm2.zrange)
-vis.gam(dsm2.zrange, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.zrange) ; par(mfrow=c(1,1))
-AIC(dsm2.zrange)
-
-dsm2.b <- dsm(density.est~s(x,y) + s(doy) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm2.b)
-vis.gam(dsm2.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.b) ; par(mfrow=c(1,1))
-AIC(dsm2.b)
-
-dsm2.y <- dsm(density.est~s(x,y) + s(doy) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm2.y)
-vis.gam(dsm2.y, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.2))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.y) ; par(mfrow=c(1,1))
-AIC(dsm2.y)
-
-dsm2.zrange %>% AIC
 dsm2.z %>% AIC
-dsm2.b %>% AIC
-dsm1.xyd %>% AIC
+dsm1.xyd_interaction %>% AIC
 dsm2.y %>% AIC
+dsm2.zrange %>% AIC
 
 # Round 3
+dsm3.zrange <- dsm(density.est~s(x,y,doy) + s(z) + s(zrange), dso_keep, sample_table, data_table, family=tw(), method="REML")
+dsm3.y <- dsm(density.est~s(x,y,doy) + s(z) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
 
-dsm3.z <- dsm(density.est~s(x,y) + s(doy) + s(zrange) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm3.z)
-vis.gam(dsm3.z, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm3.z) ; par(mfrow=c(1,1))
-AIC(dsm3.z)
-
-dsm3.b <- dsm(density.est~s(x,y) + s(doy) + s(zrange) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm3.b)
-vis.gam(dsm3.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm3.b) ; par(mfrow=c(1,1))
-AIC(dsm3.b)
-
-dsm3.y <- dsm(density.est~s(x,y) + s(doy) + s(zrange) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm3.y)
-vis.gam(dsm3.y, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm3.y) ; par(mfrow=c(1,1))
-AIC(dsm3.y)
-
-
-dsm3.z %>% AIC
-dsm3.b %>% AIC
-dsm2.zrange %>% AIC
-dsm3.y %>% AIC # lets ignore year
+dsm3.zrange %>% AIC
+dsm3.y %>% AIC
+dsm2.z %>% AIC
 
 # Round 4
-dsm4.b <- dsm(density.est~s(x,y) + s(doy) + s(zrange)  + s(z) + block, dso_keep, sample_table, data_table, family=tw(), method="REML")
-summary(dsm4.b)
-vis.gam(dsm4.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
-par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm4.b) ; par(mfrow=c(1,1))
-AIC(dsm4.b)
+dsm4.y <- dsm(density.est~s(x,y,doy) + s(z) + s(zrange) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
 
-# Compare to
-dsm3.z %>% AIC
+dsm4.y %>% AIC
+dsm3.zrange %>% AIC
 
 # Winner:
-dsm4.b
-dsm4.b %>% summary
+dsm4.y
+dsm4.y %>% summary
 
-vis.gam(dsm.tw.xy, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100)
-vis.gam(dsm4.b, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
+vis.gam(dsm4.y, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
 
 
 ################################################################################
 # Create density surface
 
 #dsm_keep <- dsm.tw.xy
-dsm_keep <- dsm4.b
+dsm_keep <- dsm4.y
 
 # Load prediction grid
 grids <- read.csv('tests/grid-kfs-1km.csv', stringsAsFactors=FALSE)
 
-predict_surface <- function(dsm_keep, sample_table, grids, cex_scale = 2, toplot=TRUE){
+predict_surface <- function(dsm_keep, sample_table, grids, cex_scale = 6, toplot=TRUE){
   # Predict on samples
   d_mean <- predict(dsm_keep, sample_table, off.set=(sample_table$Effort))
   #hist(d_mean)
@@ -286,21 +246,32 @@ predict_surface <- function(dsm_keep, sample_table, grids, cex_scale = 2, toplot
   #plot(x)
 
   # Interpolate with inverse distance weighting
-  mg <- gstat(formula = z~1, locations = ~x+y, data=df,
-              nmax=7, nmin=3,set=list(idp = 0))
-  suppressWarnings({ suppressMessages({
-    xi <- interpolate(x, mg, debug.level=0)
-  }) })
+  library(spatstat.core)
+  library(spatstat.geom)
+  dfwin <- owin(xrange = range(grid_kfs$x), yrange = range(grid_kfs$y))
+  dfppp <- ppp(x = df$x, y=df$y, window = dfwin, marks = df$z)
+  xi <- idw(dfppp, at='pixels')
   class(xi)
   #plot(xi)
 
+    #mg <- gstat(formula = z~1, locations = ~x+y, data=df,
+  #            nmax=7, nmin=3,set=list(idp = 0))
+  #suppressWarnings({ suppressMessages({
+  #  xi <- interpolate(x, mg, debug.level=0)
+  #}) })
+  #class(xi)
+  #plot(xi)
+
   #  Prepare fine-scale grid of densities
-  xdf <- as.data.frame(x, xy=TRUE)
+  xdf <- as.data.frame(xi) ; head(xdf)
   z <- as.data.frame(xi) ; z %>% head
-  names(z) <- 'z'
-  xdf$layer <- z$z
+  names(z)[3] <- 'z'
+  z %>% head
+  nrow(z)
+  nrow(xdf)
+  xdf$value <- z$z
   xdf %>% head
-  mean(xdf$layer)
+  mean(xdf$value)
 
   # Now use fine-scale raster to find predicted density at each grids location
   dist <- function(a, b){
@@ -309,7 +280,7 @@ predict_surface <- function(dsm_keep, sample_table, grids, cex_scale = 2, toplot
   df1 <- data.table(x=grids$x, y=grids$y) ; head(df1)
   df2 <- data.table(x=xdf$x, y=xdf$y) ; head(df2)
   results <- df1[, j = list(Closest =  dist(x, y)), by = 1:nrow(df1)]
-  grids$d_mean <- xdf$layer[results$Closest]
+  grids$d_mean <- xdf$value[results$Closest]
 
   # Test plot
   #hist(grids$d_mean)
@@ -322,20 +293,58 @@ predict_surface <- function(dsm_keep, sample_table, grids, cex_scale = 2, toplot
   return(grids$d_mean)
 }
 
+grids$month <- 0
 d_mean <- predict_surface(dsm_keep, sample_table, grids)
 grids$d_mean <- d_mean
+grids$d_meanr <- d_mean / sum(d_mean)
 head(grids)
 
+# Explore seasonal effect
+grid_template <- grids
+grid_mr <- grids
+
+par(mfrow=c(2,2))
+
+# June 15
+d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = 166), grids) # june 15
+gridi <- grid_template
+gridi$month <- 6
+gridi$d_mean <- d_mean
+gridi$d_meanr <- d_mean / sum(d_mean)
+grid_mr <- rbind(grid_mr, gridi)
+
+# July 15
+d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = 196), grids) # july 15
+gridi <- grid_template
+gridi$month <- 7
+gridi$d_mean <- d_mean
+gridi$d_meanr <- d_mean / sum(d_mean)
+grid_mr <- rbind(grid_mr, gridi)
+
+# August 15
+d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = 227), grids) # aug 15
+gridi <- grid_template
+gridi$month <- 8
+gridi$d_mean <- d_mean
+gridi$d_meanr <- d_mean / sum(d_mean)
+grid_mr <- rbind(grid_mr, gridi)
+
+# September 15
+d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = 258), grids) # sep 15
+gridi <- grid_template
+gridi$month <- 9
+gridi$d_mean <- d_mean
+gridi$d_meanr <- d_mean / sum(d_mean)
+grid_mr <- rbind(grid_mr, gridi)
+
+head(grid_mr)
+
 # Save results
+grids <- grid_mr
 save(grids, file='tests/hw/dsm-estimate.RData')
 save(dsm_keep, file='tests/hw/dsm-model.RData')
 
-# Explore seasonal effect
-par(mfrow=c(2,2))
-d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = (6*30)), grids)
-d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = (7*30)), grids)
-d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = (8*30)), grids)
-d_mean <- predict_surface(dsm_keep, sample_table %>% dplyr::mutate(doy = (9*30)), grids)
+hist(grids$d_mean)
 
 ################################################################################
 ################################################################################
@@ -374,6 +383,7 @@ for(i in 1:B){
     }
   }
 
+  nrow(data_bsi)
   if(nrow(data_bsi)<=0){
     data_bsi <- data.frame(Sample.Label = NA, Effort = NA, x = NA, y = NA, datetime = NA,
                            year = NA, day = NA, block = NA, z = NA, zmin = NA, zmax = NA, zsd = NA, zrange = NA, Region.Label = NA, doy = NA)
@@ -384,7 +394,7 @@ for(i in 1:B){
   #=============================================================================
   message('--- Fitting detection function ...')
   suppressWarnings({suppressMessages({
-    dso_bs <- Distance::ds(data = data_bs, truncation = 2.0, formula= ~1, key = 'hn', quiet=FALSE)
+    dso_bs <- Distance::ds(data = data_bs, truncation = 2.0, formula= ~1 + factor(year), key = 'hn', quiet=FALSE)
     #plot(dso_bs)
   }) })
 
@@ -392,7 +402,6 @@ for(i in 1:B){
   message('--- Fitting spatial density model ...')
   suppressWarnings({
     dsm_bs <- dsm(dsm_keep$formula,
-                  #density.est~s(x,y, k=12),
                   dso_bs, sample_bsi, data_bsi, family=tw(), method="REML")
   })
 
@@ -404,7 +413,7 @@ for(i in 1:B){
   d_mean <- predict_surface(dsm_bs, sample_bsi, grids, toplot=TRUE)
   d_mean %>% length
   nrow(grids)
-  bs_resulti <- data.frame(grid_id = grids$id, iteration = i, month = 0, D = d_mean)
+  bs_resulti <- data.frame(grid_id = grids$id, iteration = i, month = 0, D = d_mean, Dr = d_mean/sum(d_mean))
   head(bs_resulti)
 
   #=============================================================================
@@ -412,13 +421,14 @@ for(i in 1:B){
 
   #         6/15  7/15  8/15  9/15
   doys <- c(166,  196,  227,  258)
-  di=2
+  di=3
   for(di in 1:length(doys)){
     (doyi <- doys[di])
-    (monthi <- (1 + floor(doyi/30)))
+    (monthi <- di + 5) #(1 + floor(doyi/30)))
     message('--- --- month ',monthi,' ...')
-    d_mean <- predict_surface(dsm_bs, sample_bsi %>% dplyr::mutate(doy = doyi), grids, toplot=TRUE)
-    bs_resultii <- data.frame(grid_id = grids$id, iteration = i, month = monthi, D = d_mean)
+    d_mean <- predict_surface(dsm_bs, sample_bsi %>% dplyr::mutate(doy = doyi), cex_scale = 1, grids, toplot=TRUE)
+    text(x=-129.62, y=53.48, labels=paste0('Month ',monthi), col='red', cex=1.5, pos=4)
+    bs_resultii <- data.frame(grid_id = grids$id, iteration = i, month = monthi, D = d_mean, Dr = d_mean/sum(d_mean))
     head(bs_resultii)
     bs_resulti <- rbind(bs_resulti, bs_resultii)
   }

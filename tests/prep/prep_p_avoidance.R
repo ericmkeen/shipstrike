@@ -1,9 +1,16 @@
 # Speed - mortality curves
 
+#speeds <- seq(0,30,length=1000)
+#collides <-  (.9 / (1 + exp(-0.5*(speeds - 11.8))))
+#plot(collides~speeds, ylim=c(0,1))
+#abline(h=.5, v=11.8)
+
 speeds <- seq(0,30,length=1000)
-collides <-  (.9 / (1 + exp(-0.5*(speeds - 11.8))))
-plot(collides~speeds, ylim=c(0,1))
-abline(h=.5, v=11.8)
+collides <-  (.9 / (1 + exp(-0.15*(speeds - 11.8))))
+plot(collides~speeds, ylim=c(0,1), type='l', lwd=3, col='firebrick')
+abline(h=.5*.9, v=11.8)
+abline(h=.9*.9, v=26.5)
+
 
 fitlog <- function(v1, p1, v2, p2, asymptote = 1){
   #v1 = 11.8; p1 = 0.5; v2 = 20; p2 = 0.95
@@ -37,31 +44,31 @@ fitlog <- function(v1, p1, v2, p2, asymptote = 1){
 
 # With asymptote of 1
 
-asymptote = 1
+asymptote = .9
 
 (df4 <-
     data.frame(type = 'Cargo > 100m | Passenger > 100m | Tanker > 100m',
                fitlog(v1 = 11.8, p1 = (asymptote / 2),
-                      v2 = 17.7, p2 = (0.95 * asymptote), asymptote = asymptote)))
-
-(df3 <-
-    data.frame(type = 'Fishing < 60m | Other > 40m',
-               fitlog(v1 = 17, p1 = (asymptote / 2),
-                      v2 = 25, p2 = (0.95 * asymptote), asymptote = asymptote)))
+                      v2 = 26.5, p2 = (0.95 * asymptote), asymptote = asymptote)))
 
 (df2 <-
     data.frame(type = 'Tug < 50m | Towing < 50m',
-               fitlog(v1 = 15, p1 = (asymptote / 2),
-                      v2 = 23, p2 = (0.95 * asymptote), asymptote = asymptote)))
+               fitlog(v1 = 15.8, p1 = (asymptote / 2),
+                      v2 = 29.5, p2 = (0.9 * asymptote), asymptote = asymptote)))
+
+(df3 <-
+    data.frame(type = 'Fishing < 60m | Other > 40m',
+               fitlog(v1 = 19.8, p1 = (asymptote / 2),
+                      v2 = 31.5, p2 = (0.85 * asymptote), asymptote = asymptote)))
 
 (df1 <-
     data.frame(type = 'Pleasurecraft < 40m | Other < 40m | Sailing',
-               fitlog(v1 = 20, p1 = (asymptote / 2),
-                      v2 = 30, p2 = (0.95 * asymptote), asymptote = asymptote)))
+               fitlog(v1 = 23.8, p1 = (asymptote / 2),
+                      v2 = 32.5, p2 = (0.8 * asymptote), asymptote = asymptote)))
 
 (dfs <- rbind(df1, df2, df3, df4))
 
-saveRDS(dfs, file='tests/p_avoidance.RData')
+#saveRDS(dfs, file='tests/p_avoidance.RData')
 
 
 
