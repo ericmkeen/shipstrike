@@ -1,1 +1,3 @@
 .Rproj.user
+tests/hw/dsm-bootstraps.RData
+tests/hw/pwhale_seasonal_boots.RData

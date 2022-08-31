@@ -1,0 +1,1938 @@
+---
+title: "Supplemental Materials"
+author: "Eric Keen et al."
+date: "8/15/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(knitr)
+library(kableExtra)
+library(bangarang)
+library(ggridges)
+
+library(devtools)
+document('../../')
+
+month_initials <- c('J','F','M','A','M','J','J','A','S','O','N','D')
+```
+
+
+***** 
+
+## 1. Marine traffic
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+ais <- readRDS('../ais/AIS_2019_cleaned.RData')
+
+aistab <- ais_table(ais)
+
+knitr::kable(aistab,
+             booktabs = TRUE,
+             caption = '**Table S1.1.** Summary of 2019 marine traffic within the lower Kitimat Fjord System, as reported by archival AIS data.') %>%
+  kable_styling(latex_options="scale_down")
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Grouped AIS vessel traffic
+# Don't show this in Rmd
+ais <- readRDS('../ais/AIS_2019_grouped.RData')
+
+aistab <- ais_table(ais)
+aistab <- aistab %>% select(type, vids, transits, transit_rate,
+                            speed_mn:draft_max)
+names(aistab) <- c('Vessel type', 'IDs','Transits', 'Transits/day',
+                   'mean', 'sd', 'max', # speed
+                   'mean','sd','min','max', # length
+                   'mean', 'sd', 'min', 'max', # beam
+                   'mean', 'sd', 'min', 'max') # draft
+                   
+knitr::kable(aistab,
+             booktabs = TRUE,
+             caption = '**Table S1.2.** AIS traffic within the study area in 2019, grouped into 10 vessel classes.') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 4, 
+                            "Speed (kn)" = 3, 
+                            'Length (m)' = 4,
+                            'Beam (m)' = 4,
+                            'Draft (m)' = 4))
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Grouped AIS vessel traffic - FW habitat only in Squally Channel
+ais <- 
+  ais %>% 
+  filter(x >= -129.4519,
+         x < -129.26239,
+         y >= 53.069,
+         y < 53.3218)
+  
+aistab <- ais_table(ais)
+
+knitr::kable(aistab,
+             booktabs = TRUE,
+             caption = '**Table S1.3.** AIS traffic in 2019, restricted to prime fin whale habitat in Squally Channel, including Lewis Passage and north Campania Sound (W 129.4519 - 129.26239, N 53.069 - 53.3218)') %>%
+  kable_styling(latex_options="scale_down")
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+ais <- readRDS('../ais/AIS_2019_grouped.RData')
+
+ggplot(ais, aes(x=length)) +
+  geom_histogram() +
+  facet_wrap(~type, scales='free') +
+  ylab('AIS records') +
+  xlab('Reported length (m)') +
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title = 'Lengths (meters) for 2019 vessel types used in analysis', 
+       caption = bquote(bold('Figure S1.4.')~'Length distributions of the ten vessel classes used to summarize marine traffic in 2019.'))
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+ggplot(ais, aes(x=speed)) +
+  geom_histogram() +
+  facet_wrap(~type, scales='free') +
+  ylab('AIS records') +
+  xlab('Reported speed (knots)') +
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title = 'Speed (knots) for 2019 vessel types used in analysis', 
+       caption = bquote(bold('Figure S1.5.')~'Speed distributions, in knots, of the ten vessel classes used to summarize marine traffic in 2019.'))
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+data(ais_2019)
+
+ais <-
+  ais_2019 %>%
+  group_by(type, month, vid) %>%
+  summarize(speed = mean(speed, na.rm=TRUE))
+
+ggplot(ais, aes(x=month, y=speed)) +
+  geom_jitter(alpha=.5, width=.3) +
+  facet_wrap(~type) +
+  xlab('Month') + ylab('Vessel speed (kn)') + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  scale_x_continuous(breaks=1:12, labels=month_initials) + 
+  labs(title='Seasonal patterns in speed of marine traffic (2019)', 
+       caption = bquote(bold('Figure S1.6.')~
+                          'Rest of caption here')) 
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+ais <-
+  ais_2019 %>%
+  group_by(type, month, vid) %>%
+  summarize(length = mean(length, na.rm=TRUE)) #%>%
+
+ggplot(ais, aes(x=month, y=length)) +
+  geom_jitter(alpha=.5, width=.3) +
+  facet_wrap(~type) + 
+  ylab('Vessel size (m)') + xlab('Month') +
+  scale_x_continuous(breaks=1:12, labels=month_initials) + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Seasonal patterns in length of marine traffic (2019)', 
+       caption = bquote(bold('Figure S1.7.')~
+                          'Rest of caption here')) 
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4, fig.width = 8}
+ais_trends <- readRDS('../ais/vessel_trends.RData')
+
+ais_trends <- 
+  ais_trends %>% mutate(across(km_2014:km_2030, ~round(.,0)),
+                      scale_factor = round(scale_factor, 2),
+                      rate_2019 = round(rate_2019, 2),
+                      rate_2030 = round(rate_2030, 2),
+                      pvalue = round(pvalue, 2))
+
+(means <- ais_trends$rate_2019[ais_trends$rate_2019>0]) %>% mean
+sum(ais_trends$km_2030) / sum(ais_trends$km_2019)
+
+knitr::kable(ais_trends,
+             booktabs = TRUE,
+             caption = '**Table S1.8.** Trends (historical and predicted) in AIS traffic, 2014 - 2030.') %>%
+  kable_styling(latex_options="scale_down")
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4, fig.width = 8}
+ais_trends <- readRDS('../ais/vessel_trends_obs.RData')
+
+ggplot(ais_trends, mapping=aes(x=year, y=km, color=type)) +
+  geom_point(size=1.8) +
+  geom_line() +
+  ylab('Kilometers transited in study area') +
+  xlab(NULL) +
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(color='Vessel class',
+       title="Trends in Gitga'at area vessel traffic, 2014 - 2019",
+       caption = bquote(bold('Figure S1.9.')~
+                          'Rest of caption here')) + 
+  theme_light()
+```
+
+&nbsp;  
+
+**Table S1.x.**  Dimensions of the LNG Canada fleet, adapted from TERMPOL (2015). Note that in our analyses, we reduced the max Shell length to 298m, and the beam was adjusted according to the original length:beam ratio. 
+<center>
+![](lng_fleet.png){width=85%}
+</center>
+
+***** 
+
+## 2. Methodological details
+
+### Line-transect surveys
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+data(segments_5km)
+segments <- segments_5km
+data("whale_sightings")
+sightings <- whale_sightings
+
+if(FALSE){
+  head(segments)
+segments$Effort %>% mean
+segments$Effort %>% sum
+segments$Effort[segments$Effort < 10] %>% sum
+}
+
+# Summarize effort
+segtab <- 
+  segments %>%
+  dplyr::group_by(year) %>%
+  dplyr::summarize(segments = n(),
+                   km_effort = sum(Effort))
+
+# Summarize sightings
+sittab <- 
+  sightings %>%
+  filter(spp != 'BW') %>% 
+  filter(spp != 'DP') %>% 
+  dplyr::mutate(year = lubridate::year(datetime)) %>%
+  dplyr::group_by(year) %>%
+  dplyr::summarize(fin_tot = length(which(spp == 'FW')),
+                   fin_valid = length(which(spp=='FW' & !is.na(distance))),
+                   humpback_tot = length(which(spp == 'HW')),
+                   humpback_valid = length(which(spp=='HW' & !is.na(distance)))) 
+
+lta_tab <- left_join(segtab, sittab, by='year')
+
+names(lta_tab) <- c('Year','segments', 'km', 'total', 'valid', 'total', 'valid')
+knitr::kable(lta_tab,
+             booktabs = TRUE,
+             caption = '**Table S2.x.** Effort and sighting details from line-trasect surveys within the Kitimat Fjord Surveys, 2013 - 2015.') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 1, 
+                            "Effort" = 2, 
+                            'Fin whales'=2, 
+                            'Humpback whales' = 2))
+
+```
+
+&nbsp;  
+<center>
+![](../figs/lta/LTA.png){width=85%}
+</center>
+**Figure S2.x.** (a) Design-based line-transect survey effort throughout the central Gitga’at waters of the Kitimat Fjord System (each dot is the center of a 5-km segment of systematic effort), yielding detections of (b) fin whales and (c) humpback whales. Detection dot size reflects group size
+
+&nbsp;  
+
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# FW detection function models
+load('../fw/ds-models.RData')
+df_tab_fw <- Distance::summarize_ds_models(dso1, dso2, dso3)
+df_tab_fw$Model <- 1:nrow(df_tab_fw)
+df_tab_fw1 <- data.frame(Species = c('Fin whale', rep('',times=(nrow(df_tab_fw)-1))), df_tab_fw)
+
+# HW detection function models
+load('../hw/ds-models.RData')
+df_tab_hw <- Distance::summarize_ds_models(dso1, dso2, dso3)
+df_tab_hw$Model <- 1:nrow(df_tab_hw)
+df_tab_hw1 <- data.frame(Species = c('Humpback whale', rep('',times=(nrow(df_tab_hw)-1))), df_tab_hw)
+
+df_tab <- rbind(df_tab_fw1, df_tab_hw1)
+names(df_tab) <- c('Species',names(df_tab_fw))
+
+knitr::kable(df_tab,
+             booktabs = TRUE,
+             caption = '**Table S2.x.** Best-fitting models of the detection functions for fin whales and humpback whales, based upon 2013-2015 line-transect surveys.') %>%
+  kable_styling(latex_options="scale_down")
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap='**Figure S2.x.** Detection functions.'}
+load('../fw/ds-models.RData')
+ds_fw <- dso1
+
+load('../hw/ds-models.RData')
+ds_hw <- dso3
+
+par(mfrow=c(1,2))
+plot(ds_fw, main='Fin whales')
+plot(ds_hw, main='Humpback whales')
+```
+
+&nbsp;  
+<center>
+![](../figs/maps/Fig-bathy.png){width=85%}
+</center>
+**Figure S2.x.** Bathymetric characteristics of the study area, as summarized for the square-kilometer grid used in density surface modeling.
+&nbsp;  
+
+### Fin whale dive tag analysis 
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+df <- readRDS('../psurface/tag_data.RData')
+
+ggplot(df, aes(x=datetime, y=z)) +
+  geom_point(alpha=.5, size=.5) +
+  ylim(220, 0) +
+  ylab('Tag depth (m)') +
+  xlab(NULL) +
+  facet_wrap(~id, scales='free') +
+  theme_light() + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Raw tag data', 
+       caption = bquote(bold('Figure S1.x.')~'Raw time- and depth-distributions of depth sensor readings for each of the 7 SPLASH-10 tag deployments.')) 
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+ggplot(df, aes(x=hour, y=z, color=diel)) +
+  geom_point(alpha=.5) +
+  ylim(220, 0) +
+  xlab('Hour of day (UTC)') +
+  ylab('Tag depth (m)') +
+  facet_wrap(~id) +
+  labs(color='Diel period') +
+  theme_light() + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Tag data by time of day', 
+       caption = bquote(bold('Figure S1.x.')~'Time distribution (hour of day, color-coded by daytime/nighttime) of depth samples from SPLASH10 tags.')) 
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+# Summarize tag dataset
+id_summary <-
+  df %>%
+  group_by(id, deploy_ptt) %>%
+  summarize(start = min(datetime),
+            stop = max(datetime),
+            span = as.numeric(difftime(max(datetime), min(datetime), units='hours')),
+            hours = (75*n()/3600),
+            n = n(),
+            n_day = length(which(diel == 'day')),
+            n_night = length(which(diel == 'night'))) %>% 
+  mutate(frac_valid = round(hours / span, 2))
+
+# Produce table
+knitr::kable(id_summary,
+             booktabs = TRUE,
+             caption = '**Table S1.x.** Summary of SPLASH10 depth data used in fin whale depth distribution analysis.') %>%
+  kable_styling(latex_options="scale_down")
+
+if(FALSE){
+ # Code for results details
+  nrow(df) # total valid records
+nrow(df[df$diel == 'day',]) / nrow(df)
+
+id_summary
+
+id_summary$hours / id_summary$span
+
+id_summary <-
+  id_summary %>%
+  dplyr::filter(id != 7)
+
+id_summary$n %>% sum
+id_summary$n %>% mean
+id_summary$n %>% sd
+
+id_summary$n_day %>% sum
+id_summary$n_day %>% mean
+id_summary$n_day %>% sd
+
+id_summary$n_night %>% sum
+id_summary$n_night %>% mean
+id_summary$n_night %>% sd
+}
+
+# In response, remove id 7
+df <- df %>% dplyr::filter(id != 7)
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# For each depth, get proportion of records shallower than it
+mr <- data.frame()
+i=1
+for(i in 1:length(unique(df$id))){
+  idi <- i
+  dfi <- df %>% dplyr::filter(id == idi)
+
+  zs <- seq(0,250,by=0.5)
+  zi <- 10
+
+  dieli <- c('night','day')
+  for(di in dieli){
+    dfid <- dfi %>% dplyr::filter(diel == di)
+    props <- c()
+    for(zi in zs){
+      (n_shallower <- length(which(dfid$z <= zi)))
+      (propi <- n_shallower / nrow(dfid))
+      props <- c(props, propi)
+    }
+    mri <- data.frame(id=i, z = zs, diel = di, prop = props)
+    mr <- rbind(mr, mri)
+  }
+}
+#nrow(mr)
+
+ggplot(mr, aes(x=prop, y=z, color = factor(id))) +
+  geom_line() +
+  ylim(220, 0) +
+  xlab('Proportion of records shallower') +
+  ylab('Depth (m)') +
+  facet_wrap(~diel) +
+  labs(color = 'Deployment') +
+  theme_light() + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Depth use by tag', 
+       caption = bquote(bold('Figure S1.x.')~
+                          'Daytime (left) and nighttime (right) depth distribution curves, representing the proportion of time spent above a given depth, for six SPLASH-10 deployments on fin whales (colored lines).')) 
+```
+
+&nbsp;  
+
+### Collision & mortality analysis
+
+```{r, echo=FALSE, eval=FALSE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+data(p_collision)
+p_collision
+
+data(p_lethality)
+names(p_lethality) <- c('type','c4','c5','c6')
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8}
+pcoll <- readRDS('../../data-raw/collision_fig.RData')
+pmort <- readRDS('../../data-raw/lethal_fig.RData')
+
+names(pcoll) <- c('Speed (kn)', 'P', 'Vessel group')
+pcoll$curve <- 'P(Collision)'
+
+names(pmort) <- c('Speed (kn)', 'P', 'Vessel group')
+pmort$curve <- 'P(Lethality)'
+
+mr <- rbind(pcoll, pmort)
+keeper <- mr$`Vessel group` %>% unique %>% tail(1)
+mr <- mr %>% filter(`Vessel group` == keeper)
+
+ggplot(mr, aes(x=`Speed (kn)`,
+               y=P)) +
+  geom_line(lwd=1.2, alpha=.75, col='firebrick') +
+  scale_x_continuous(breaks=seq(0,30,by=5)) +
+  scale_y_continuous(breaks=seq(0,1,by=.1), limits=c(0,1)) +
+  theme_light() +
+  facet_wrap(~curve) + 
+  labs(title='Probabilities of collision & mortality', 
+       caption = bquote(bold('Figure S1.x.')~
+                          'Probabilities of collision (left) and mortality (right) as a function of ship speed (>180m length), adapted from Gende et al. (2011).')) 
+```
+    
+***** 
+
+```{r, echo=FALSE, eval=FALSE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Fin whales -- Canadian Pacific stock (Wright et al. 2022)
+pbr(N = 2893, CV = 0.15)
+
+# Fin whales -- North Coast Sector (Wright et al. 2022)
+pbr(N = 161, CV = 0.50)
+
+# Fin whales -- coastal (Queen Charlotte, Hecate Strait) (Nichol et al 2017)
+pbr(N = 405, CV = 0.6)
+
+# Humpback whales -- Canadian Pacific stock (Wright et al. 2022)
+pbr(N = 7030, CV = 0.1)
+
+# Humpback whales -- North Coast sector (Wright et al. 2022)
+pbr(N = 1816, CV = 0.13)
+```
+
+## 3. Results details
+
+&nbsp;  
+
+### Vessel traffic
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Prep data
+data(ais_2019)
+traffic <- ais_2019
+vessels <- unique(traffic$type)
+channels <- unique(traffic$channel)
+
+traffic$channi <- traffic$channel
+traffic$channi[traffic$channi == 'WRI'] <- 'Wright'
+traffic$channi[traffic$channi == 'WHA'] <- 'Whale'
+traffic$channi[traffic$channi == 'VER'] <- 'Verney'
+traffic$channi[traffic$channi == 'SQU'] <- 'Squally'
+traffic$channi[traffic$channi == 'MCK'] <- 'McKay'
+traffic$channi[traffic$channi == 'EST'] <- 'Estevan'
+traffic$channi[traffic$channi == 'CMP'] <- 'Campania'
+traffic$channi[traffic$channi == 'CAA'] <- 'Caamano'
+#traffic$channi %>% table
+traffic$channi <- factor(traffic$channi, levels=c('Caamano','Estevan','Campania','Squally',
+                                                  'Whale','Wright','McKay','Verney'))
+
+months <- c('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')
+months <- factor(months, levels=months)
+traffic$m <- months[traffic$month]
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+tfi <-
+  traffic %>%
+  mutate(dt_vid = paste0(vid,'-',lubridate::yday(datetime))) %>%
+  group_by(channi, diel) %>%
+  summarize(n = length(unique(dt_vid)))
+
+ggplot(tfi, aes(x=n, y=factor(channi), fill=diel)) +
+  geom_col(alpha=.6) +
+  ylab('Channel') +
+  xlab('Transits') +
+  labs(fill = 'Diel period') +
+  theme_light() + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Marine traffic (2019) activity, by waterway', 
+       caption = bquote(bold('Figure S3.x.')~
+                          'Distribution of 2019 marine traffic parsed by waterway and time of day.')) 
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+tfi <-
+  traffic %>%
+  mutate(dt_vid = paste0(vid,'-',lubridate::yday(datetime))) %>%
+  group_by(diel, month, m) %>%
+  summarize(n = length(unique(dt_vid)))
+
+ggplot(tfi, aes(x=month, y=n, color=diel, lty=diel)) +
+  geom_line() +
+  scale_x_continuous(breaks=1:12, labels=months) +
+  xlab(NULL) +
+  ylab('Transits') +
+  labs(color = 'Diel period', lty='Diel period') +
+  theme_light() + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Seasonal activity of marine traffic (2019), by diel period', 
+       caption = bquote(bold('Figure S3.x.')~
+                          'Monthly distribution of 2019 marine traffic, parsed by time of day.')) 
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 8}
+tfi <-
+  traffic %>%
+  mutate(dt_vid = paste0(vid,'-',lubridate::yday(datetime))) %>%
+  group_by(channi, type) %>%
+  summarize(n = length(unique(dt_vid)))
+
+ggplot(tfi, aes(x=n, y=type)) +
+  geom_col() +
+  xlab('Transits') +
+  ylab(NULL) +
+  facet_wrap(~channi) + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Marine traffic (2019) activity, parsed by vessel type & by waterway', 
+       caption = bquote(bold('Figure S3.x.')~
+                          'Counts of AIS location fixes for 10 vessel types in 2019, displayed for each waterway in the study area separately.')) 
+```
+
+&nbsp;  
+
+### Species distribution models 
+
+Table 3.4	DSM
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+spp <- c('Fin whale', 'Humpback whale')
+Formula <- c('(Lat x Lon)* + seafloor depth* + seafloor range*',
+             '(Lat x Lon x DOY)* + seafloor depth* + seafloor range* + year*')
+td <- c('2.0 km', '2.7 km')
+fam <- c('Tweedie', 'Tweedie')
+linkf <- c('log','log')
+deltaic <- c(104, 14)
+devexp <- c("54%", "51%")
+
+dsmtab <- tibble(Species = spp,
+                 Formula,
+                 `Trunc. dist.`=td,
+                 Family = fam,
+                 `Link function` = linkf,
+                 `Delta AIC` = deltaic,
+                 `Deviance explained` = devexp)
+
+knitr::kable(dsmtab,
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Best-fitting density surface models for fin whales and humpback whales for mid-June – early-September. “Truncation distance” = distance at which the most distant 10% of sightings were excluded to improve model fit; "Formula" = the model formula, in which "DOY" means Day of Year and an asterisk (*) indicates coefficient significance at p < 0.0001; "Family" = the error distribution used in the model; "Link function" = the link function used in the model; "Delta AIC" = the difference between this and the second-best-fitting model; "Deviance explained" = the percent of deviance explained by the model, and "Predictors included" indicate which predictors were included in the model, along with their respective p-value (blank = not tested; "—" = tested but not included).') %>%
+  kable_styling(latex_options="scale_down")
+
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# FIN WHALES
+if(file.exists('d_fw.RData')){
+  d_fw <- readRDS('d_fw.RData')
+}else{
+  load('tests/fw/dsm-estimate.RData')
+grids %>% head
+grids <- grids %>% mutate(d_mean = ifelse(d_mean < 0, 0, d_mean))
+grids$channi <- grids$block
+grids$channi[grids$channi == 'WRI'] <- 'Wright'
+grids$channi[grids$channi == 'WHA'] <- 'Whale'
+grids$channi[grids$channi == 'VER'] <- 'Verney'
+grids$channi[grids$channi == 'SQU'] <- 'Squally'
+grids$channi[grids$channi == 'MCK'] <- 'McKay'
+grids$channi[grids$channi == 'EST'] <- 'Estevan'
+grids$channi[grids$channi == 'CMP'] <- 'Campania'
+grids$channi[grids$channi == 'CAA'] <- 'Caamano'
+
+d_fw <- grids %>% 
+  group_by(channi) %>% 
+  summarize(Density = mean(d_mean, na.rm=TRUE) %>% round(3)) %>% 
+  rename(Waterway = channi)
+
+d_fw <- d_fw %>% 
+  add_row(data.frame(Waterway = 'Study area', 
+                     Density = grids %>% summarize(dmean = mean(d_mean)) %>% pull(dmean) %>% round(3)))
+d_fw
+
+load('tests/fw/dsm-bootstraps.RData')
+boots <- bootstraps %>% mutate(D = ifelse(D < 0, 0, D))
+gridjoin <- grids %>% select(grid_id=id, Waterway = channi)
+boots <- left_join(boots, gridjoin, by='grid_id')
+head(boots)
+
+bs_fw <- boots %>% 
+  group_by(Waterway) %>% 
+  summarize(l95 = quantile(D, .025, na.rm=TRUE) %>% round(3),
+            u95 = quantile(D, .975, na.rm=TRUE) %>% round(3))
+
+bs_fw <- bs_fw %>% 
+  add_row(data.frame(Waterway = 'Study area', 
+                     l95 = boots %>% summarize(l95 = quantile(D, .025, na.rm=TRUE)) %>% pull(l95) %>% round(3),
+                     u95 = boots %>% summarize(u95 = quantile(D, .975, na.rm=TRUE)) %>% pull(u95) %>% round(3)))
+bs_fw
+
+d_fw <- 
+  left_join(d_fw, bs_fw, by='Waterway') %>% 
+  mutate(Season = paste0(Density, ' (',l95,'-',u95,')')) %>% 
+  select(Waterway, Season)
+
+saveRDS(d_fw, file='d_fw.RData')
+}
+
+#d_fw
+knitr::kable(d_fw,
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Fin whale density (95% confidence interval) by waterway (whales per square km), , as estimated from the best-fitting density surface model. Confidence intervals are estimated using a bootstrap procedure.') %>%
+  kable_styling(latex_options="scale_down")
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# HUMPBACK WHALES
+if(file.exists('d_hw.RData')){
+  d_hw <- readRDS('d_hw.RData')
+}else{
+  load('tests/hw/dsm-estimate.RData')
+grids %>% head
+grids <- grids %>% mutate(d_mean = ifelse(d_mean < 0, 0, d_mean))
+grids$channi <- grids$block
+grids$channi[grids$channi == 'WRI'] <- 'Wright'
+grids$channi[grids$channi == 'WHA'] <- 'Whale'
+grids$channi[grids$channi == 'VER'] <- 'Verney'
+grids$channi[grids$channi == 'SQU'] <- 'Squally'
+grids$channi[grids$channi == 'MCK'] <- 'McKay'
+grids$channi[grids$channi == 'EST'] <- 'Estevan'
+grids$channi[grids$channi == 'CMP'] <- 'Campania'
+grids$channi[grids$channi == 'CAA'] <- 'Caamano'
+
+d_hw <- grids %>% 
+  group_by(channi) %>% 
+  summarize(Season = mean(d_mean[month==0], na.rm=TRUE) %>% round(3),
+            June = mean(d_mean[month==6], na.rm=TRUE) %>% round(3),
+            July = mean(d_mean[month==7], na.rm=TRUE) %>% round(3),
+            Aug = mean(d_mean[month==8], na.rm=TRUE) %>% round(3),
+            Sep = mean(d_mean[month==9], na.rm=TRUE) %>% round(3)) %>% 
+  rename(Waterway = channi)
+
+d_hw <- d_hw %>% 
+  add_row(data.frame(Waterway = 'Study area', 
+                     Season = grids %>% filter(month == 0) %>% summarize(dmean = mean(d_mean)) %>% pull(dmean) %>% round(3),
+                     June = grids %>% filter(month == 6) %>% summarize(dmean = mean(d_mean)) %>% pull(dmean) %>% round(3),
+                     July = grids %>% filter(month == 7) %>% summarize(dmean = mean(d_mean)) %>% pull(dmean) %>% round(3),
+                     Aug = grids %>% filter(month == 8) %>% summarize(dmean = mean(d_mean)) %>% pull(dmean) %>% round(3),
+                     Sep = grids %>% filter(month == 9) %>% summarize(dmean = mean(d_mean)) %>% pull(dmean) %>% round(3)))
+
+d_hw
+
+load('tests/hw/dsm-bootstraps.RData')
+boots <- bootstraps %>% mutate(D = ifelse(D < 0, 0, D))
+gridjoin <- grids %>% select(grid_id=id, Waterway = channi)
+boots <- left_join(boots, gridjoin, by='grid_id')
+head(boots)
+
+bs_hw <- boots %>% 
+  group_by(Waterway) %>% 
+  summarize(Season_l95 = quantile(D[month==0], .025, na.rm=TRUE) %>% round(3),
+            Season_u95 = quantile(D[month==0], .975, na.rm=TRUE) %>% round(3),
+            June_l95 = quantile(D[month==6], .025, na.rm=TRUE) %>% round(3),
+            June_u95 = quantile(D[month==6], .975, na.rm=TRUE) %>% round(3),
+            July_l95 = quantile(D[month==7], .025, na.rm=TRUE) %>% round(3),
+            July_u95 = quantile(D[month==7], .975, na.rm=TRUE) %>% round(3),
+            Aug_l95 = quantile(D[month==8], .025, na.rm=TRUE) %>% round(3),
+            Aug_u95 = quantile(D[month==8], .975, na.rm=TRUE) %>% round(3),
+            Sep_l95 = quantile(D[month==9], .025, na.rm=TRUE) %>% round(3),
+            Sep_u95 = quantile(D[month==9], .975, na.rm=TRUE) %>% round(3))
+
+bs_hw <- bs_hw %>% 
+  add_row(data.frame(Waterway = 'Study area', 
+                     Season_l95 = boots %>% summarize(l95 = quantile(D[month==0], .025, na.rm=TRUE)) %>% pull(l95) %>% round(3),
+                     Season_u95 = boots %>% summarize(u95 = quantile(D[month==0], .975, na.rm=TRUE)) %>% pull(u95) %>% round(3),
+                     June_l95 = boots %>% summarize(l95 = quantile(D[month==6], .025, na.rm=TRUE)) %>% pull(l95) %>% round(3),
+                     June_u95 = boots %>% summarize(u95 = quantile(D[month==6], .975, na.rm=TRUE)) %>% pull(u95) %>% round(3),
+                     July_l95 = boots %>% summarize(l95 = quantile(D[month==7], .025, na.rm=TRUE)) %>% pull(l95) %>% round(3),
+                     July_u95 = boots %>% summarize(u95 = quantile(D[month==7], .975, na.rm=TRUE)) %>% pull(u95) %>% round(3),
+                     Aug_l95 = boots %>% summarize(l95 = quantile(D[month==8], .025, na.rm=TRUE)) %>% pull(l95) %>% round(3),
+                     Aug_u95 = boots %>% summarize(u95 = quantile(D[month==8], .975, na.rm=TRUE)) %>% pull(u95) %>% round(3),
+                     Sep_l95 = boots %>% summarize(l95 = quantile(D[month==9], .025, na.rm=TRUE)) %>% pull(l95) %>% round(3),
+                     Sep_u95 = boots %>% summarize(u95 = quantile(D[month==9], .975, na.rm=TRUE)) %>% pull(u95) %>% round(3)
+                     ))
+bs_hw
+
+d_hw <- 
+  left_join(d_hw, bs_hw, by='Waterway') %>% 
+  mutate(Season = paste0(Season, ' (',Season_l95,'-',Season_u95,')'),
+         June = paste0(June, ' (',June_l95,'-',June_u95,')'),
+         July = paste0(July, ' (',July_l95,'-',July_u95,')'),
+         August = paste0(Aug, ' (',Aug_l95,'-',Aug_u95,')'),
+         September = paste0(Sep, ' (',Sep_l95,'-',Sep_u95,')'),
+         ) %>% 
+  select(Waterway, Season, June, July, August, September)
+
+saveRDS(d_hw, file='d_hw.RData')
+}
+
+#d_hw
+knitr::kable(d_hw,
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Humpback whale density (95% confidence interval) by waterway (whales per square km), , as estimated from the best-fitting density surface model. Confidence intervals are estimated using a bootstrap procedure.') %>%
+  kable_styling(latex_options="scale_down")
+```
+
+&nbsp;  
+
+### Seasonality  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+seastab <- tibble(Family = 'Negative binomial',
+                  Formula = 'count ~ s(doy, k=5) + offset(log(minutes))',
+                  edf = 2.803,
+                  `P-value of coefficient` = 0.0007,
+                  `Deviance explained` = '26%')
+
+knitr::kable(seastab,
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Summary of GAM of seasonal fin whale abundance. This model was used to scale the June-September density estimate.') %>%
+  kable_styling(latex_options="scale_down")               
+```
+
+&nbsp;  
+
+### Close-encounter rates
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Fin whale ====================================================================
+
+fw <- readRDS('../fw/ais_2019/p_encounter.RData')
+fw$species <- 'Fin whale'
+fw$scenario <- 'AIS 2019'
+
+fw2 <- readRDS('../fw/lng_canada/p_encounter.RData')
+fw2$species <- 'Fin whale'
+fw2$scenario <- 'LNG Canada (8 - 14 kn)'
+
+fw3 <- readRDS('../fw/cedar_lng/p_encounter.RData')
+fw3$species <- 'Fin whale'
+fw3$scenario <- 'Cedar LNG (8 - 14 kn)'
+
+fw <- rbind(fw, fw2, fw3)
+
+# Humpback =====================================================================
+
+hw <- readRDS('../hw/ais_2019/p_encounter.RData')
+hw$species <- 'Humpback whale'
+hw$scenario <- 'AIS 2019'
+
+hw2 <- readRDS('../hw/lng_canada/p_encounter.RData')
+hw2$species <- 'Humpback whale'
+hw2$scenario <- 'LNG Canada (8 - 14 kn)'
+
+hw3 <- readRDS('../hw/cedar_lng/p_encounter.RData')
+hw3$species <- 'Humpback whale'
+hw3$scenario <- 'Cedar LNG (8 - 14 kn)'
+
+hw <- rbind(hw, hw2, hw3)
+
+penc <- rbind(fw, hw)
+
+# Refactor alphabetically
+penc$type <- factor(penc$type, levels=rev(sort(unique(penc$type))))
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Tabulate =====================================================================
+
+penctab <- 
+  penc %>% 
+  group_by(type) %>% 
+  summarize(fw_median = round(median(p_encounter[species == 'Fin whale']),3),
+            fw_mean = round(mean(p_encounter[species == 'Fin whale']),3),
+            fw_sd = round(sd(p_encounter[species == 'Fin whale']),3),
+            fw_l95 = round(quantile(p_encounter[species == 'Fin whale'], 0.025),3),
+            fw_u95 = round(quantile(p_encounter[species == 'Fin whale'], 0.975),3),
+            blank = '',
+            hw_median = round(median(p_encounter[species == 'Humpback whale']),3),
+            hw_mean = round(mean(p_encounter[species == 'Humpback whale']),3),
+            hw_sd = round(sd(p_encounter[species == 'Humpback whale']),3),
+            hw_l95 = round(quantile(p_encounter[species == 'Humpback whale'], 0.025),3),
+            hw_u95 = round(quantile(p_encounter[species == 'Humpback whale'], 0.975),3)
+            ) %>% 
+  mutate(diff = fw_median - hw_median) %>% 
+  arrange(desc(type))
+
+  penctab$diff %>% mean
+
+  names(penctab) <- c('Vessel type', 
+                    'Median', 'Mean', 'SD', 'LCI', 'UCI',
+                    '',
+                    'Median', 'Mean', 'SD', 'LCI', 'UCI',
+                    'FW - HW')
+
+knitr::kable(penctab,
+             align = c('r',rep('c',times=11)),
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Close encounter rate') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 1, 
+                            "Fin whales" = 5, 
+                            ' '=1, 
+                            'Humpback whales' = 5,
+                            ' ' = 1))
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=8, fig.width = 8}
+# Plot it ======================================================================
+ggplot(penc, aes(x=p_encounter, y=type, fill=species)) + 
+  geom_density_ridges(quantile_lines = TRUE, quantiles = 2,
+                      scale=1.5,
+                      lwd=.25,
+                      rel_min_height = 0.01,
+                      alpha=.5) +
+  scale_x_continuous(breaks=seq(0, .2, by=.02)) + 
+  theme_light() + 
+  ylab(NULL) + 
+  xlab('P(encounter)') + 
+  labs(fill = 'Species',
+       title = 'Close-encounter rates by vessel type')
+```
+
+&nbsp;  
+
+### Depth distribution 
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+data(p_surface)
+
+surf_tab <- 
+  p_surface %>% 
+  filter(z %in% c(1,2,5,10,15,20,25,30)) %>% 
+  group_by(z) %>% 
+  summarize(Day_mean = paste0(round(p_mean[diel=='day']*100, 1),'%'),
+            Day_SD = paste0(round(p_sd[diel=='day']*100, 1),'%'),
+            Night_mean = paste0(round(p_mean[diel=='night']*100, 1),'%'),
+            Night_SD = paste0(round(p_sd[diel=='night']*100, 1),'%')) %>% 
+  rename(`Depth (m)` = z)
+
+names(surf_tab) <- c(names(surf_tab)[1], 'Mean', 'SD', 'Mean', 'SD')
+
+knitr::kable(surf_tab,
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Proportion of time fin whale spend above various depth cutoffs (1m, 2m, …, 30m), estimated for day and night separately based upon the mean and SD from six SPLASH-10 tag deployments.') %>%
+  kable_styling(latex_options="scale_down") %>% 
+    add_header_above(header=c(" " = 1, "Daytime" = 2, 'Nighttime' = 2))
+
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+data(p_surface)
+
+ggplot(p_surface, aes(x=p_mean, y=z, color=diel)) +
+  geom_point(mapping = aes(x=p_sd, y=z, color=diel), alpha=.4, shape=3) +
+  geom_line(lwd=2, alpha=.7) +
+  ylim(220, 0) +
+  xlab('Proportion of time spent in shallower depths') +
+  ylab('Depth (m)') +
+  labs(color = 'Diel period') +
+  theme_light() + 
+  theme(plot.caption = element_text(hjust = 0)) + 
+  labs(title='Mean (SD) depth distribution', 
+       caption = bquote(bold('Figure S3.x.')~'Daytime (pink) and nighttime (teal) depth distribution curves for fin whale in and near the Kitimat Fjord System, representing the average proportion of time spent above a given depth across all tag deployments (n=6 in 2013 and 2014). Points on the left side of the plot represent the SD at each depth. ')) 
+```
+
+&nbsp;  
+
+### Outcome forecasts  
+
+```{r, echo=FALSE, eval=TRUE}
+rerun <- FALSE
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+fw <- readRDS('../fw/results.RData')
+hw <- readRDS('../hw/results.RData')
+
+# Combined outcomes for all traffic in 2030
+fwall <- rbind(fw$outcomes$ais_2030, fw$outcomes$lng_canada, fw$outcomes$cedar_lng)
+hwall <- rbind(hw$outcomes$ais_2030, hw$outcomes$lng_canada, hw$outcomes$cedar_lng)
+```
+
+```{r, echo=FALSE, eval=FALSE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+# Scratchpad
+
+fw$outcomes$ais_2019 %>% head
+
+#hw$outcomes$lng_canada %>% 
+hw$outcomes$ais_2019 %>% 
+  filter(month %in% 6:9) %>% 
+  group_by(vessel, iteration) %>% 
+  summarize(deaths = sum(mortality2.2)) %>% 
+  group_by(vessel) %>% 
+  summarize(deaths = median(deaths))
+```
+
+
+#### Interaction rates
+
+```{r, echo=FALSE, eval=TRUE}
+# Fin whales ===================================================================
+
+events <- c('cooccurrence', 'encounter', 'surface', 'surface2')
+
+fw19 <- 
+  outcome_table(fw$outcomes$ais_2019) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'AIS 2019') 
+
+fw30 <- 
+  outcome_table(fw$outcomes$ais_2030) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'AIS 2030') 
+
+fwlngca <- 
+  outcome_table(fw$outcomes$lng_canada) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'LNG Canada') 
+
+fwcedar <- 
+  outcome_table(fw$outcomes$cedar_lng) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'Cedar LNG')
+
+fwtot <- 
+  outcome_table(fwall) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'Total traffic 2030') 
+
+fwint <- rbind(fw19, fw30, fwlngca, fwcedar, fwtot) %>% 
+  mutate(`95% CI` = paste0(round(q5),' - ',round(q95))) %>% 
+  select(species, scheme, Event = event, Mean = mean, Median = median, `95% CI`, `80% Conf.`= q20)
+
+#fwint
+
+# Humpback whales ===================================================================
+
+hw19 <- 
+  outcome_table(hw$outcomes$ais_2019) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'AIS 2019') 
+
+hw30 <- 
+  outcome_table(hw$outcomes$ais_2030) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'AIS 2030') 
+
+hwlngca <- 
+  outcome_table(hw$outcomes$lng_canada) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'LNG Canada') 
+
+hwcedar <- 
+  outcome_table(hw$outcomes$cedar_lng) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'Cedar LNG')
+
+hwtot <- 
+  outcome_table(hwall) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'Total traffic 2030') 
+
+hwint <- rbind(hw19, hw30, hwlngca, hwcedar, hwtot) %>% 
+  mutate(`95% CI` = paste0(round(q5),' - ',round(q95))) %>% 
+  select(species, scheme, Event = event, Mean = mean, Median = median, `95% CI`, `80% Conf.`= q20)
+
+#hwint
+
+# Build table
+intkable <- cbind((fwint %>% select(-species) %>% rename(`Traffic scheme` = scheme)), 
+                   (hwint %>% select(-species, -scheme, -Event)))
+intkable$Event <- as.character(intkable$Event)
+intkable$Event[intkable$Event == 'cooccurrence'] <- 'Cooccurrence'
+intkable$Event[intkable$Event == 'encounter'] <- 'Close encounter'
+intkable$Event[intkable$Event == 'surface'] <- 'Strike-zone event'
+intkable$Event[intkable$Event == 'surface2'] <- '(1.5x draft)'
+#intkable
+
+intkable$`Traffic scheme` <- c('AIS 2019', '', '', '',
+                               'AIS 2030', '', '', '',
+                               'LNG Canada', '', '', '',
+                               'Cedar LNG', '', '', '',
+                               'Total 2030', '', '', '')
+knitr::kable(intkable,
+             align = c('r', 'r','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Interaction rates.') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 2, "Fin whales" = 4, 'Humpback whales' = 4))
+```
+
+
+
+#### Collisions & mortalities
+
+```{r, echo=FALSE, eval=TRUE}
+# Fin whales ===================================================================
+
+events <- c('collision2.1', 'collision2.2', 'collision2.4',
+            'mortality2.1', 'mortality2.2', 'mortality2.4')
+
+vessels <- c("Cargo > 180m", "Passenger > 180m", 
+             "LNG Canada tanker in-heel",  "LNG Canada tanker in-product",
+             "Cedar LNG tanker in-heel", "Cedar LNG tanker in-product")
+
+fw19 <- 
+  outcome_table((fw$outcomes$ais_2019 %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'AIS 2019') 
+
+fw30 <- 
+  outcome_table((fw$outcomes$ais_2030 %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'AIS 2030') 
+
+fwlngca <- 
+  outcome_table((fw$outcomes$lng_canada %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'LNG Canada') 
+
+fwcedar <- 
+  outcome_table((fw$outcomes$cedar_lng %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'Cedar LNG')
+
+fwtot <- 
+  outcome_table((fwall %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Fin whale', scheme = 'Total traffic 2030') 
+
+fwint <- rbind(fw19, fw30, fwlngca, fwcedar, fwtot) %>% 
+  mutate(`95% CI` = paste0(round(q5),' - ',round(q95))) %>% 
+  select(species, scheme, Event = event, Mean = mean, Median = median, `95% CI`, `80% Conf.`= q20)
+
+#fwint
+
+# Humpback whales ===================================================================
+
+hw19 <- 
+  outcome_table((hw$outcomes$ais_2019 %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'AIS 2019') 
+
+hw30 <- 
+  outcome_table((hw$outcomes$ais_2030 %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'AIS 2030') 
+
+hwlngca <- 
+  outcome_table((hw$outcomes$lng_canada %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'LNG Canada') 
+
+hwcedar <- 
+  outcome_table((hw$outcomes$cedar_lng %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'Cedar LNG')
+
+hwtot <- 
+  outcome_table((hwall %>% filter(vessel %in% vessels))) %>% 
+  filter(event %in% events) %>% 
+  mutate(species = 'Humpback whale', scheme = 'Total traffic 2030') 
+
+hwint <- rbind(hw19, hw30, hwlngca, hwcedar, hwtot) %>% 
+  mutate(`95% CI` = paste0(round(q5),' - ',round(q95))) %>% 
+  select(species, scheme, Event = event, Mean = mean, Median = median, `95% CI`, `80% Conf.`= q20)
+
+#hwint
+
+# Build table
+intkable <- cbind((fwint %>% select(-species) %>% rename(`Traffic scheme` = scheme)), 
+                   (hwint %>% select(-species, -scheme, -Event)))
+intkable
+
+intkable$`Traffic scheme` <- c('AIS 2019', rep('', times=5),
+                               'AIS 2030', rep('', times=5),
+                               'LNG Canada', rep('', times=5),
+                               'Cedar LNG', rep('', times=5),
+                               'Total 2030', rep('', times=5))
+intkable$Event <- c(rep(c('Collision', rep('', times=2),
+                          'Mortality', rep('', times=2)), times=5))
+
+intkable$Avoidance <- c(rep(c('0.55', '~ Speed', 'None'), times=10))
+
+(intkable <- intkable[, c(1,2,11,3:10)])
+names(intkable) <- c('Traffic scheme', 'Event', 'Avoidance',
+                     rep(c('Mean', 'Median', '95% CI', '80% Conf.'), times=2))
+knitr::kable(intkable,
+             align = c('r', 'r','r','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = '**Table S3.x.** Interaction rates.') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 3, "Fin whales" = 4, 'Humpback whales' = 4))
+```
+
+
+```{r, echo=FALSE, eval=TRUE}
+################################################################################
+# Impact table function
+
+outcome_kable <- function(fw, hw, caption){
+  # Fin whales =====================================
+  gt <- outcome_table(fw)
+  #gt
+  
+  gt$Interaction <- c('Cooccurrence', 'Close encounter', 'Strike-zone event', '',
+                      'Collision', '', '', '', '', '', '', '',
+                      'Mortality', '', '', '', '', '', '', '')
+
+  gt$`Strike zone` <- c('','','1x draft', '1.5x draft', 
+                        '1x draft', '', '', '','1.5x draft', '', '', '',
+                        '1x draft', '', '', '','1.5x draft', '', '', '')
+
+  gt$`P(Avoidance)` <- c('', '', '', '', 
+                         '0.55', '~ speed', 'w. prior', '0.00',
+                         '0.55', '~ speed', 'w. prior', '0.00',
+                         '0.55', '~ speed', 'w. prior', '0.00',
+                         '0.55', '~ speed', 'w. prior', '0.00')
+
+  gt$`Mean (95% CI)` <- paste0(round(gt$mean),' (',round(gt$q5),'-',round(gt$q95),')')
+  gt$`80% confidence` <- round(gt$q20)
+
+  gt$year <- NULL
+  gt$species <- NULL
+
+  gt_final <- gt %>% select(Interaction, `Strike zone`, `P(Avoidance)`, `Mean (95% CI)`, `80% confidence`) 
+
+# Humpback whales =====================================
+  gt <- outcome_table(hw)
+  #(gt <- hw$grand_table)
+  gt %>% as.data.frame
+  if(nrow(gt)>nrow(gt_final)){gt <- gt[21:40,]}
+  gt_final$space <- ' '
+  gt_final$hw_mean <- paste0(round(gt$mean),' (',round(gt$q5),'-',round(gt$q95),')')
+  gt_final$hw_80 <- round(gt$q20)
+  
+  names(gt_final) <- c(names(gt_final)[1:5], ' ', names(gt_final)[4:5])
+  names(gt_final)
+  
+knitr::kable(gt_final,
+             align = c('r','r','r','c','c','c','c'),
+             booktabs = TRUE,
+             caption = caption) %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 3, "Fin whales" = 2, ' '=1, 'Humpback whales' = 2))
+}
+
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+outcome_kable(fw$outcomes$ais_2019, 
+              hw$outcomes$ais_2019, 
+              caption = '**Table S3.x.** Estimate of annual whale-vessel interactions attributable to **AIS traffic in 2019**.')
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+outcome_kable(fw$outcomes$ais_2030, 
+              hw$outcomes$ais_2030, 
+              caption = '**Table S3.x.** Forecast of annual whale-vessel interactions attributable to **AIS traffic in 2030**.')
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+outcome_kable(fw$outcomes$lng_canada, 
+              hw$outcomes$lng_canada, 
+              caption = '**Table S3.x.** Forecast of annual whale-vessel interactions attributable to the **LNG Canada** project in 2030.')
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+outcome_kable(fw$outcomes$cedar_lng, 
+              hw$outcomes$cedar_lng, 
+              caption = '**Table S3.x.** Forecast of annual whale-vessel interactions attributable to the **Cedar LNG** project in 2030.')
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+outcome_kable(fwall,
+              hwall,
+              caption = '**Table S3.x.** Forecast of annual whale-vessel interactions attributable to **ALL traffic in 2030**.')
+```
+
+&nbsp;  
+
+
+Figure 3.19	OUT-2019
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+ # Histograms
+    gg_outcomes <- outcome_histograms(mr)
+    gg_outcomes$all
+    gg_outcomes$simple
+```
+
+&nbsp;  
+
+Figure 3.20	OUT-2030
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+```
+
+&nbsp;  
+
+Figure 3.21	OUT-LNG Canada
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+```
+
+&nbsp;  
+
+Figure 3.22	OUT-Cedar LNG
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+```
+
+&nbsp;  
+
+### Maps of predicted outcomes
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+outcomes_grid <- readRDS('tests/fw/lng_canada/outcomes_grid.RData')
+head(outcomes_grid)
+nrow(outcomes_grid)
+
+outcome_map(outcomes_grid)
+outcome_map(fw$grid$ais_2030, varplot='cooccurrence')
+outcome_map(fw$grid$ais_2030, varplot='collision2.2')
+#outcome_map(outcomes_grid, varfacet = 'vessel')
+#outcome_map(outcomes_grid, varplot='collision2.2', varfacet = 'vessel')
+ 
+```
+
+
+#### Chances of certain outcome severities
+
+```{r, echo=FALSE, eval=FALSE, warning = FALSE, message = FALSE}
+# CHANCES OF AT LEAST ...
+
+# FW
+chances <- outcome_chances(fw$outcomes$ais_2019)$at_least
+chances <- data.frame(Species = c('Fin whale',rep('', times=(nrow(chances)-1))), chances)
+names(chances)[2] <- 'Chances (%) of...'
+chances_fw <- chances
+
+chances <- outcome_chances(fw$outcomes$ais_2030)$at_least
+chances_fw$c30 <- chances$Collisions
+chances_fw$m30 <- chances$Mortalities
+
+chances <- outcome_chances(fw$outcomes$cedar_lng)$at_least
+chances_fw$clngca <- chances$Collisions
+chances_fw$mlngca <- chances$Mortalities
+
+chances <- outcome_chances(fw$outcomes$lng_canada)$at_least
+chances_fw$ccedar <- chances$Collisions
+chances_fw$mcedar <- chances$Mortalities
+
+chances <- outcome_chances(fwall)$at_least
+chances_fw$ctot <- chances$Collisions
+chances_fw$mtot <- chances$Mortalities
+
+# HW
+chances <- outcome_chances(hw$outcomes$ais_2019)$at_least
+chances <- data.frame(Species = c('Humpback whale',rep('', times=(nrow(chances)-1))), chances)
+names(chances)[2] <- 'Chances (%) of...'
+chances_hw <- chances
+
+chances <- outcome_chances(hw$outcomes$ais_2030)$at_least
+chances_hw$c30 <- chances$Collisions
+chances_hw$m30 <- chances$Mortalities
+
+chances <- outcome_chances(hw$outcomes$cedar_lng)$at_least
+chances_hw$clngca <- chances$Collisions
+chances_hw$mlngca <- chances$Mortalities
+
+chances <- outcome_chances(hw$outcomes$lng_canada)$at_least
+chances_hw$ccedar <- chances$Collisions
+chances_hw$mcedar <- chances$Mortalities
+
+chances <- outcome_chances(hwall)$at_least
+chances_hw$ctot <- chances$Collisions
+chances_hw$mtot <- chances$Mortalities
+
+chances <- rbind(chances_fw, chances_hw)
+names(chances) <- c(names(chances)[1:2], 
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.')
+
+knitr::kable(chances,
+             align = c('r','r','c','c','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = '**Table 3.x.** Chances of various impact severities for fin whales and humpback whales, due to present-day AIS-transmitting traffic (represented by 2019 traffic), projected AIS-transmitting traffic in 2030, projected LNG Canada traffic, projected Cedar LNG traffic, then all traffic in 2030 (previous categories combined).') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 2, 
+                            "AIS 2019" = 2, 
+                            'AIS 2030' = 2,
+                            'LNG Canada' = 2,
+                            'Cedar LNG' = 2,
+                            'All traffic 2030' = 2))
+```
+
+&nbsp;  
+
+```{r, echo=FALSE, eval=FALSE, warning = FALSE, message = FALSE}
+# CHANCES OF NO MORE THAN ...
+
+# FW
+chances <- outcome_chances(fw$outcomes$ais_2019)$no_more_than
+chances <- data.frame(Species = c('Fin whale',rep('', times=(nrow(chances)-1))), chances)
+names(chances)[2] <- 'Chances (%) of...'
+chances_fw <- chances
+
+chances <- outcome_chances(fw$outcomes$ais_2030)$no_more_than
+chances_fw$c30 <- chances$Collisions
+chances_fw$m30 <- chances$Mortalities
+
+chances <- outcome_chances(fw$outcomes$cedar_lng)$no_more_than
+chances_fw$clngca <- chances$Collisions
+chances_fw$mlngca <- chances$Mortalities
+
+chances <- outcome_chances(fw$outcomes$lng_canada)$no_more_than
+chances_fw$ccedar <- chances$Collisions
+chances_fw$mcedar <- chances$Mortalities
+
+chances <- outcome_chances(fwall)$no_more_than
+chances_fw$ctot <- chances$Collisions
+chances_fw$mtot <- chances$Mortalities
+
+# HW
+chances <- outcome_chances(hw$outcomes$ais_2019)$no_more_than
+chances <- data.frame(Species = c('Humpback whale',rep('', times=(nrow(chances)-1))), chances)
+names(chances)[2] <- 'Chances (%) of...'
+chances_hw <- chances
+
+chances <- outcome_chances(hw$outcomes$ais_2030)$no_more_than
+chances_hw$c30 <- chances$Collisions
+chances_hw$m30 <- chances$Mortalities
+
+chances <- outcome_chances(hw$outcomes$cedar_lng)$no_more_than
+chances_hw$clngca <- chances$Collisions
+chances_hw$mlngca <- chances$Mortalities
+
+chances <- outcome_chances(hw$outcomes$lng_canada)$no_more_than
+chances_hw$ccedar <- chances$Collisions
+chances_hw$mcedar <- chances$Mortalities
+
+chances <- outcome_chances(hwall)$no_more_than
+chances_hw$ctot <- chances$Collisions
+chances_hw$mtot <- chances$Mortalities
+
+chances <- rbind(chances_fw, chances_hw)
+names(chances) <- c(names(chances)[1:2], 
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.',
+                    'Coll.', 'Mort.')
+
+knitr::kable(chances,
+             align = c('r','r','c','c','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = '**Table 3.x.** Chances of various impact severities for fin whales and humpback whales, similar to above, now described as the chances of experiencing *no more than* the stated number of events.') %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 2, 
+                            "AIS 2019" = 2, 
+                            'AIS 2030' = 2,
+                            'LNG Canada' = 2,
+                            'Cedar LNG' = 2,
+                            'All traffic 2030' = 2))
+```
+
+&nbsp;  
+
+#### Share of risk
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+# Shares of risk
+if(!file.exists('shares_fw.RData')){
+fw_2019 <- outcome_shares(fw$outcomes$ais_2019)
+fw_2030 <- outcome_shares(fw$outcomes$ais_2030)
+fw_lngca <- outcome_shares(fw$outcomes$lng_canada)
+fw_cedar <- outcome_shares(fw$outcomes$cedar_lng)
+fw_tot <- outcome_shares(fwall)
+fw_shares <- list(s2019 = fw_2019, 
+                  s2030 = fw_2030,
+                  slngca = fw_lngca,
+                  scedar = fw_cedar,
+                  stot = fw_tot)
+saveRDS(fw_shares, file= 'shares_fw.RData')
+}
+
+# HW
+if(!file.exists('shares_hw.RData')){
+hw_2019 <- outcome_shares(hw$outcomes$ais_2019)
+hw_2030 <- outcome_shares(hw$outcomes$ais_2030)
+hw_lngca <- outcome_shares(hw$outcomes$lng_canada)
+hw_cedar <- outcome_shares(hw$outcomes$cedar_lng)
+hw_tot <- outcome_shares(hwall)
+hw_shares <- list(s2019 = hw_2019, 
+                  s2030 = hw_2030,
+                  slngca = hw_lngca,
+                  scedar = hw_cedar,
+                  stot = hw_tot)
+saveRDS(hw_shares, file= 'shares_hw.RData')
+}
+
+fws <- readRDS('shares_fw.RData')
+hws <- readRDS('shares_hw.RData')
+
+```
+
+##### Share of risk across vessel types
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+share_results <- function(fws_v, hws_v, caption){
+  
+# Fin ========================================
+fws_v <- fws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>%
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+sharetab_fw <- fws_v %>% tidyr::pivot_wider(id_cols = vessel, names_from = event, values_from = prop)
+
+# Humpback ========================================
+hws_v <- hws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>% 
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+sharetab_hw <- hws_v %>% tidyr::pivot_wider(id_cols = vessel, names_from = event, values_from = prop)
+
+# Kable ==========================================
+
+sharekable <- data.frame(sharetab_fw, sharetab_hw[,2:5])
+names(sharekable) <- c('Vessel', 
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality',
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality')
+
+share_kable <- 
+  knitr::kable(sharekable,
+             align = c('r','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = paste0('**Table ',caption)) %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 1, 
+                            "Fin whales" = 4, 
+                            'Humpback whales' = 4))
+
+# Plot =============================================
+
+gg_shares <- function(shares){ 
+  gg <- 
+    ggplot(shares, aes(x=prop, y=vessel)) + 
+  geom_col() + 
+  facet_wrap(~event, nrow=1) + 
+  theme_light() + 
+  xlab('Share of risk (%)') + 
+  ylab(NULL) + 
+  theme(strip.text.x = ggplot2::element_text(size=9, color='grey95', face='bold'),
+                     strip.background = ggplot2::element_rect(fill="grey60"))
+  return(gg)
+}
+
+ggshare <- ggpubr::ggarrange(gg_shares(fws_v) + labs(title = '(a) Fin whales'), 
+                  gg_shares(hws_v) + labs(title = '(b) Humpback whales'),
+                  nrow=2)
+
+return(list(kable = share_kable, plot = ggshare))
+}
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$s2019$vessel, 
+                      hws$s2019$vessel,
+                      '3.x.** Share of risk attributable to each vessel class **in 2019**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each vessel class **in 2019**.}
+resi$plot
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$stot$vessel, 
+                      hws$stot$vessel,
+                      '3.x.** Share of risk attributable to each vessel class **in 2030**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each vessel class **in 2030**.}
+resi$plot
+```
+
+&nbsp;  
+
+##### Share of risk across waterways
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+share_results <- function(fws_v, hws_v, caption){
+  
+# Fin ========================================
+fws_v <- fws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>%
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+ fws_v$channel[fws_v$channel == 'CAA'] <- 'Caamano'
+ fws_v$channel[fws_v$channel == 'EST'] <- 'Estevan'
+ fws_v$channel[fws_v$channel == 'CMP'] <- 'Campania'
+ fws_v$channel[fws_v$channel == 'SQU'] <- 'Squally'
+ fws_v$channel[fws_v$channel == 'WHA'] <- 'Whale'
+ fws_v$channel[fws_v$channel == 'WRI'] <- 'Wright'
+ fws_v$channel[fws_v$channel == 'MCK'] <- 'McKay'
+ fws_v$channel[fws_v$channel == 'VER'] <- 'Verney'
+ fws_v$channel <- factor(fws_v$channel, levels=c('Caamano','Estevan','Campania','Squally','Whale','Wright','McKay','Verney'))
+
+sharetab_fw <- fws_v %>% tidyr::pivot_wider(id_cols = channel, names_from = event, values_from = prop)
+
+
+# Humpback ========================================
+hws_v <- hws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>% 
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+hws_v$channel[hws_v$channel == 'CAA'] <- 'Caamano'
+ hws_v$channel[hws_v$channel == 'EST'] <- 'Estevan'
+ hws_v$channel[hws_v$channel == 'CMP'] <- 'Campania'
+ hws_v$channel[hws_v$channel == 'SQU'] <- 'Squally'
+ hws_v$channel[hws_v$channel == 'WHA'] <- 'Whale'
+ hws_v$channel[hws_v$channel == 'WRI'] <- 'Wright'
+ hws_v$channel[hws_v$channel == 'MCK'] <- 'McKay'
+ hws_v$channel[hws_v$channel == 'VER'] <- 'Verney'
+ hws_v$channel <- factor(hws_v$channel, levels=c('Caamano','Estevan','Campania','Squally','Whale','Wright','McKay','Verney'))
+
+sharetab_hw <- hws_v %>% tidyr::pivot_wider(id_cols = channel, names_from = event, values_from = prop)
+
+# Kable ==========================================
+
+sharekable <- data.frame(sharetab_fw, sharetab_hw[,2:5])
+names(sharekable) <- c('Waterway', 
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality',
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality')
+
+share_kable <- 
+  knitr::kable(sharekable,
+             align = c('r','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = paste0('**Table ',caption)) %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 1, 
+                            "Fin whales" = 4, 
+                            'Humpback whales' = 4))
+
+# Plot =============================================
+
+gg_shares <- function(shares){ 
+  gg <- 
+    ggplot(shares, aes(x=prop, y=channel)) + 
+  geom_col() + 
+  facet_wrap(~event, nrow=1) + 
+  theme_light() + 
+  xlab('Share of risk (%)') + 
+  ylab(NULL) + 
+  theme(strip.text.x = ggplot2::element_text(size=9, color='grey95', face='bold'),
+                     strip.background = ggplot2::element_rect(fill="grey60"))
+  return(gg)
+}
+
+ggshare <- ggpubr::ggarrange(gg_shares(fws_v) + labs(title = '(a) Fin whales'), 
+                  gg_shares(hws_v) + labs(title = '(b) Humpback whales'),
+                  nrow=2)
+
+return(list(kable = share_kable, plot = ggshare))
+}
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$s2019$channel, 
+                      hws$s2019$channel,
+                      '3.x.** Share of risk attributable to each waterway **in 2019**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each waterway **in 2019**.}
+resi$plot
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$stot$channel, 
+                      hws$stot$channel,
+                      '3.x.** Share of risk attributable to each waterway **in 2030**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each waterway **in 2030**.}
+resi$plot
+```
+
+&nbsp;  
+
+##### Share of risk across months
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+share_results <- function(fws_v, hws_v, caption){
+  
+# Fin ========================================
+fws_v <- fws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>%
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+sharetab_fw <- fws_v %>% tidyr::pivot_wider(id_cols = month, names_from = event, values_from = prop)
+
+# Humpback ========================================
+hws_v <- hws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>% 
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+sharetab_hw <- hws_v %>% tidyr::pivot_wider(id_cols = month, names_from = event, values_from = prop)
+
+# Kable ==========================================
+
+sharekable <- data.frame(sharetab_fw, sharetab_hw[,2:5])
+names(sharekable) <- c('Month', 
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality',
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality')
+
+share_kable <- 
+  knitr::kable(sharekable,
+             align = c('r','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = paste0('**Table ',caption)) %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 1, 
+                            "Fin whales" = 4, 
+                            'Humpback whales' = 4))
+
+# Plot =============================================
+
+gg_shares <- function(shares){ 
+  gg <- 
+    ggplot(shares, aes(x=prop, y=factor(month))) + 
+  geom_col() + 
+  facet_wrap(~event, nrow=1) + 
+  theme_light() + 
+  xlab('Share of risk (%)') + 
+  ylab(NULL) + 
+  theme(strip.text.x = ggplot2::element_text(size=9, color='grey95', face='bold'),
+                     strip.background = ggplot2::element_rect(fill="grey60"))
+  return(gg)
+}
+
+ggshare <- ggpubr::ggarrange(gg_shares(fws_v) + labs(title = '(a) Fin whales'), 
+                  gg_shares(hws_v) + labs(title = '(b) Humpback whales'),
+                  nrow=2)
+
+return(list(kable = share_kable, plot = ggshare))
+}
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$s2019$month, 
+                      hws$s2019$month,
+                      '3.x.** Share of risk attributable to each month **in 2019**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each month **in 2019**.}
+resi$plot
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$stot$month, 
+                      hws$stot$month,
+                      '3.x.** Share of risk attributable to each month **in 2030**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each month **in 2030**.}
+resi$plot
+```
+
+&nbsp;  
+
+##### Share of risk across diel periods
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+share_results <- function(fws_v, hws_v, caption){
+  
+# Fin ========================================
+fws_v <- fws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>%
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+sharetab_fw <- fws_v %>% tidyr::pivot_wider(id_cols = diel, names_from = event, values_from = prop)
+
+# Humpback ========================================
+hws_v <- hws_v %>% 
+  filter(event %in% c('cooccurrence', 'surface2', 'collision2.2', 'mortality2.2')) %>% 
+  mutate(event = stringr::str_to_sentence(event)) %>% 
+  mutate(event = gsub('2.2', '', event)) %>% 
+  mutate(event = gsub('Surface2', 'Strike-zone event', event)) %>% 
+  mutate(event = factor(event, levels = c('Cooccurrence', 'Strike-zone event', 'Collision', 'Mortality')))
+
+sharetab_hw <- hws_v %>% tidyr::pivot_wider(id_cols = diel, names_from = event, values_from = prop)
+
+# Kable ==========================================
+
+sharekable <- data.frame(sharetab_fw, sharetab_hw[,2:5])
+names(sharekable) <- c('Month', 
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality',
+                       'Cooccur.', 'Strike-zone', 'Collision', 'Mortality')
+
+share_kable <- 
+  knitr::kable(sharekable,
+             align = c('r','c','c','c','c','c','c','c','c'),
+             booktabs = TRUE,
+             caption = paste0('**Table ',caption)) %>%
+  kable_styling(latex_options="scale_down") %>% 
+  add_header_above(header=c(" " = 1, 
+                            "Fin whales" = 4, 
+                            'Humpback whales' = 4))
+
+# Plot =============================================
+
+gg_shares <- function(shares){ 
+  gg <- 
+    ggplot(shares, aes(x=prop, y=diel)) + 
+  geom_col() + 
+  facet_wrap(~event, nrow=1) + 
+  theme_light() + 
+  xlab('Share of risk (%)') + 
+  ylab(NULL) + 
+  theme(strip.text.x = ggplot2::element_text(size=9, color='grey95', face='bold'),
+                     strip.background = ggplot2::element_rect(fill="grey60"))
+  return(gg)
+}
+
+ggshare <- ggpubr::ggarrange(gg_shares(fws_v) + labs(title = '(a) Fin whales'), 
+                  gg_shares(hws_v) + labs(title = '(b) Humpback whales'),
+                  nrow=2)
+
+return(list(kable = share_kable, plot = ggshare))
+}
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$s2019$diel, 
+                      hws$s2019$diel,
+                      '3.x.** Share of risk attributable to each diel period **in 2019**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each diel period **in 2019**.}
+resi$plot
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
+resi <- share_results(fws$stot$diel, 
+                      hws$stot$diel,
+                      '3.x.** Share of risk attributable to each diel period **in 2030**.')
+resi$kable
+```
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S3.x. Share of risk attributable to each month **in 2030**.}
+resi$plot
+```
+
+&nbsp;  
+
+### Validation
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+outcomes <- readRDS('tests/fw/ais_2015/outcomes.RData')
+results <- outcome_validation(outcomes)
+
+outcomes <- readRDS('tests/hw/ais_2015/outcomes.RData')
+results <- outcome_validation(outcomes)
+
+```
+
+
+### Mitigation measures  
+
+Tables 3.2x etc	for MITIGATION
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+    # Handle mitigation filters
+    mr <- mitigate(outcomes = mr, mitigation_filters = mitigation_filters)
+    MR$df <- mr
+```
+
+&nbsp;  
+
+Figure 3.2x etc	for MITIGATION
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+fwm <- readRDS('..tests/fw/mitigation/mitigation.RData')
+hwm <- readRDS('..tests/hw/mitigation/mitigation.RData')
+```
+
+
+Tables for humpback whale photogrammetry analysis
+
+Tables for humpback whale track analysis
+
+
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
+
+outcomes <- readRDS('tests/fw/ais_2015/outcomes.RData')
+results <- outcome_validation(outcomes)
+
+outcomes <- readRDS('tests/hw/ais_2015/outcomes.RData')
+results <- outcome_validation(outcomes)
+
+
+
+  436111
+  72621
+
+  7030 / 436111
+  1816 / 72621
+
+  2893 / 436111
+  161 / 72621
+
+  # Fin whales (Gitga'at average)
+  0.014 / 0.007 # eez (Wright)
+  0.014 / 0.002 # north coast (Wright)
+  0.014 / 0.003 # vancouver island (Nichol)
+
+  # Fin whales (Squally Ch)
+  0.031 / 0.007 # eez
+  0.031 / 0.002 # north coast
+  0.031 / 0.003
+
+  # Humpback whales (Gitga'at average)
+  0.079 / 0.016 # eez (Wright)
+  0.079 / 0.025 # north coast (Wright)
+  0.079 / 0.014 # vancouver island (Nichol)
+
+  # Humpback whales (Wright Sound)
+  0.0117 / 0.016 # eez
+  0.0117 / 0.025 # north coast
+  0.0117 / 0.014
+
+
+  
+```
