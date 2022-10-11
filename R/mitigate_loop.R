@@ -1,11 +1,20 @@
 #' Loop through months to find most efficacious mitigation window
 #'
-#' @param outcomes desc
-#' @param mitigation_duration desc
-#' @param reschedule desc
-#' @param vessels desc
+#' To test the effects of seasonally displacing ship traffic
+#' (i.e., rescheduling transits from a given month into other months)
+#' *or* seasonally cancelling ship traffic
+#' (i.e., a moratorium), you can use the `shipstrike` function `mitigate_loop()`,
+#' which applies the displacement window to each candidate month in a loop.
+#' This allows us to determine which month would be the most efficacious target for mitigation.
 #'
-#' @return desc
+#' @param outcomes The result of `outcome_predict()`.
+#' @param mitigation_duration Number indicating the number of months to use as a mitigation period.
+#' Keen et al. (2023) tests durations of 1, 2, and 3 months.
+#' @param reschedule Boolean, with default `FALSE`, indicating whether traffic during the mitigation window
+#' should be rescheduled (`reschedule == TRUE`) or cancelled (`FALSE)`.
+#' @param vessels A character vector indicating for which vessel types this mitigation action applies.
+#'
+#' @return See the `shipstrike` package vignette & Keen et al. (2023) for details.
 #' @export
 #'
 mitigate_loop <- function(outcomes,
@@ -22,6 +31,8 @@ mitigate_loop <- function(outcomes,
   #reschedule = TRUE
 
   # Loop through month candidates for the moratorium
+  mitigated_hist <- outcomes %>% group_by(iteration) %>%
+    summarize(outcome = sum(mortality2.2)) %>% mutate(test = 'Baseline') %>% select(test, outcome)
   (mitigated_outcomes <- outcome_table(outcomes) %>% mutate(test = 'Baseline'))
   mitigated_chances <- outcome_chances(outcomes)$at_least %>% mutate(test = 'Baseline')
   i=7
@@ -57,6 +68,12 @@ mitigate_loop <- function(outcomes,
     #after
     mitigated$mortality2.2 %>% sum
 
+    # Histograms
+    hist_mi <- mitigated %>% group_by(iteration) %>%
+      summarize(outcome = sum(mortality2.2)) %>%
+      mutate(test = titi) %>% select(test, outcome)
+    mitigated_hist <- rbind(mitigated_hist, hist_mi)
+
     # Outcomes
     out_mi <- outcome_table(mitigated) %>%
     mutate(test = titi)
@@ -72,7 +89,8 @@ mitigate_loop <- function(outcomes,
   }
 
   mitigation_results <- list(outcomes = mitigated_outcomes,
-                             chances = mitigated_chances)
+                             chances = mitigated_chances,
+                             hist = mitigated_hist)
 
   return(mitigation_results)
 }

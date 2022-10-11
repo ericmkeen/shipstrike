@@ -7,7 +7,7 @@
 mitigate(outcomes, mitigation_filters)
 }
 \arguments{
-\item{outcomes}{desc}
+\item{outcomes}{The result of \code{outcome_predict()}.}
 
 \item{mitigation_filters}{desc}
 }

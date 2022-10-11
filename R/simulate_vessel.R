@@ -1,5 +1,7 @@
 #' Simulate a set of vessel transits on a spatial grid
 #'
+#' This function is deprecated but may still be useful in some contexts.
+#'
 #' @param grids A spatial grid of cells, as produced by `shipstrike::make_grid()` (see documentation)
 #' (or at least matching the format thereof).
 #' @param vessels A list of lists, each one representing settings for the simulation of a set of vessel transits.

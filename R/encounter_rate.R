@@ -1,24 +1,87 @@
-#' New encounter rate function
+#' Simulator to estimate whale-vessel close-encounter rate
 #'
-#' @param vessels desc
-#' @param whales desc
-#' @param outcome_dir desc
-#' @param month_batches desc
-#' @param speed_restriction Apply a maximum speed, converting all vessel positions
-#' that exceed that maximum to the maximum.
-#' @param lengths_restricted Minimum length affected by speed restriction, if any.
-#' @param new_speeds desc
-#' @param runs desc
-#' @param iterations desc
+#' In the `shipstrike` framework, the "close-encounter rate" is
+#' the rate at which a vessel and whale are expected to intersect in time and
+#' horizontal space assuming no avoidance measures are taken. In other words, it is
+#' the share of cooccurrences (i.e., whale and ship occur in same square km) that will
+#' lead to immediate overlap if not avoided.
 #'
-#' @return desc (note that if runs == 1, a detailed dataframe will be returned (about 2.5 million rows))
+#' The close-encounter rate is influenced by vessel parameters (dimensions, speed, directionality)
+#' as well as whale parameters (dimensions, speed, directionality), all of which change throughout the year
+#' and by diel period (i.e., daytime or nighttime).
+#'
+#' This function utilizes simulations to predict the close-encounter rate for each
+#' combination of vessel type, diel period, and "month batch" provided.
+#' This simulator is described in detail in Keen et al. (2022). It is designed to
+#' produce a posterior distribution of the encounter rate estimate.
+#'
+#' @param vessels A `data.frame` of vessel position fixes. Each row ought to be
+#' a position fix within a spatial grid cell for a single transit from a single vessel,
+#' with no more than one row per cell-transit-vessel.  Require fields:
+#' \itemize{
+#' \item `grid_id` = Grid cell identifier.
+#' \item `vid` = Unique vessel identifier (numeric)
+#' \item `type` = Vessel type (character string)
+#' \item `speed` = Vessel speed, in knots (numeric)
+#' \item `length` = Vessel length, in meters (numeric)
+#' \item `width` = Vessel beam width, in meters (numeric)
+#' \item `draft` = Vessel beam width, in meters (numeric)
+#' \item `datetime` = Datetime in UTC, with format `yyyy-mm-dd hh:mm:ss`
+#' \item `x` = Longitude, decimal degrees (Western degrees negative)
+#' \item `y` = Latitude, decimal degrees (Southern degrees negative)
+#' \item `year` = Year (yyyy)
+#' \item `diel` = Diel period -- either `"day"` or `"night"` (character)
+#' }
+#'
+#' @param whales A `list` providing parameters for whale dimensions, speed, and directivity.
+#' For examples, see the `shipstrike` functions `fin_params()` or `humpback_params()`.
+#'
+#' @param outcome_dir Path specifiying the directory into which the simulator result will be saved.
+#' Default is your working directory.
+#'
+#' @param month_batches A list specifying how months of vessel traffic should be grouped together
+#' into seasons.
+#'
+#'
+#' @param speed_restriction Option to apply a maximum speed, in knots, converting all vessel positions
+#' that exceed that maximum to the maximum. This is a convenience input that allows you to see the effect of
+#' a speed-restriction mitigation measure on the encounter rate.
+#'
+#' @param lengths_restricted Option to specify the minimum length to which the above speed restriction would apply.
+#' This lets you apply the speed restriction only to certain ship lengths.
+#'
+#' @param new_speeds Another option to applying virtual mitigation measures: specify a new vector
+#' of ship speeds (can be length `1` or the same as the number of rows in`vessels`).
+#'
+#' @param runs The number of runs. Each run produces a single estimate of the encounter rate
+#' based on the fraction of `iterations` that results in a close-encounter.
+#' Note that if `runs` is `1`, the function will return detailed diagnostics on the simulation.
+#' If `runs` is more than `1`, simple results will be returned instead.
+#'
+#' @param iterations The number of simulations to produce for each run of the simulator.
+#' The fraction of these iterations that result in a close-encounter is taked as the estimate
+#' of the encounter rate for that run.
+#'
+#' @return If `runs` is more than `1` (we recommend at least 100 for a
+#' minimum acceptable posterior distribution size), a `data.frame` will be returned
+#' with 5 fields: `type` (the vessel type), `month`, `diel`, `i` (the run identifier),
+#' and `p_encounter` (the estimate of the encounter rate for that run). Each row
+#' is the result of a single run.
+
+#' If `runs` is just `1`, a detailed `data.frame` will be returned which
+#' can be passed to `shipstrike::encounter_diagnostics` for
+#' a data-rich QA/QC overview of the encounter rate simulation process.
+#'
+#' See the package vignette for examples.
+#'
 #' @import dplyr
 #' @import ggplot2
 #' @import sf
 #' @export
+#'
 encounter_rate <- function(vessels,
                            whales,
-                           outcome_dir,
+                           outcome_dir = '',
                            month_batches = list(winter = c(0:4, 11:12),
                                                 summer = 5:10),
                            speed_restriction = NULL,

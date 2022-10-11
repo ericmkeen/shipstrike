@@ -2,7 +2,7 @@
 % Please edit documentation in R/fin_params.R
 \name{fin_params}
 \alias{fin_params}
-\title{Fin whale parameters}
+\title{Fin whale parameters to use in ship-strike analysis}
 \usage{
 fin_params(
   length_min = 10,
@@ -25,48 +25,58 @@ fin_params(
 )
 }
 \arguments{
-\item{length_min}{Whale dimensions will be drawn from
-a truncated normal distribution (source: Keen et al 2021)}
+\item{length_min}{Minimum whale length (meters) used to define a truncated normal distribution.}
 
-\item{length_max}{desc}
+\item{length_max}{Maximum whale length (meters) used to define a truncated normal distribution.}
 
-\item{length_mean}{desc}
+\item{length_mean}{Mean whale length (meters).}
 
-\item{length_sd}{desc}
+\item{length_sd}{Standard deviation in whale length (meters).}
 
-\item{width_factor}{will be used to scale length to find width}
+\item{width_factor}{The scaling factor used to estimate whale fluke width based on length.
+For exampl, a \code{width_factor} of 0.1 means a 20m whale has a fluke width of 2 meters.}
 
-\item{speed_day_min}{Whale speed will be drawn from
-a truncated normal distribution (source: Hendricks et al 2021)}
+\item{speed_day_min}{Minimum daytime whale speed (meters/second)
+used to define a truncated normal distribution.}
 
-\item{speed_day_max}{desc}
+\item{speed_day_max}{Maximum daytime whale speed (meters/second)
+used to define a truncated normal distribution.}
 
-\item{speed_day_mean}{desc}
+\item{speed_day_mean}{Mean daytime whale speed (meters/second)}
 
-\item{speed_day_sd}{desc}
+\item{speed_day_sd}{Standard deviation of daytime whale speed (meters/second)}
 
-\item{speed_night_min}{desc}
+\item{speed_night_min}{Minimum nighttime whale speed (meters/second)
+used to define a truncated normal distribution.}
 
-\item{speed_night_max}{desc}
+\item{speed_night_max}{Maximum nighttime whale speed (meters/second)
+used to define a truncated normal distribution.}
 
-\item{speed_night_mean}{desc}
+\item{speed_night_mean}{Mean nighttime whale speed (meters/second)}
 
-\item{speed_night_sd}{desc}
+\item{speed_night_sd}{Standard deviation of nighttime whale speed (meters/second)}
 
-\item{delta_day_mean}{Whale track variability defined as the
-standard deviation of changes in whale course every 60 seconds;
-values will be drawn from a normal distribution then reverse-log-transformed
-(source: Hendricks et al. 2021)}
+\item{delta_day_mean}{Mean of daytime whale track variability, defined as the
+standard deviation of changes in whale course (log-transformed) every 60 seconds;
+values will be drawn from a normal distribution with mean 0, then reverse-log-transformed.}
 
-\item{delta_day_sd}{desc}
+\item{delta_day_sd}{Standard deviation of track variability.}
 
-\item{delta_night_mean}{desc}
+\item{delta_night_mean}{Mean of nighttime whale track variability.}
 
-\item{delta_night_sd}{desc}
+\item{delta_night_sd}{Standard deviation of nighttime whale track variability.}
 }
 \value{
-
+A named list of these inputs, without any changes at all. Pass this list to
+\code{shipstrike::encounter_rate()} or \code{shipstrike::outcome_predict()}.
 }
 \description{
-Fin whale parameters
+A list of parameters used for fin whales in the analyses within \emph{Keen et al. (2023)}.
+These parameters include all the details needed to estimate close-encounter rates and
+predictions of whale-vessel interaction rates and collisions. You can use these same values
+to get started in setting up your analysis,
+then use this function to modify the values to fit your specific study.
+}
+\details{
+The sources and rationale for these values are explaiend in \emph{Keen et al. (2023)}.
 }

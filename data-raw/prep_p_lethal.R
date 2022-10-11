@@ -73,7 +73,7 @@ predlog <- function(speeds = seq(0, 30, length=1000),
 }
 
 mr <- data.frame()
-i=1
+i=4
 for(i in 1:nrow(dfs)){
   (dfi <- dfs[i,])
   preds <- predlog(c1=dfi$c1, c2 = dfi$c2, asymptote = dfi$asymptote)

@@ -18,7 +18,7 @@ pbr(N, CV, Rmax = 0.08, Fr = 0.5, toplot = FALSE)
 \item{toplot}{Boolean, whether or not to plot the distribution of the abundance estimate.}
 }
 \value{
-A simple list
+A simple named \code{list} with slots \verb{$PBR}, \verb{$Nmin}, \verb{$Rmax}, \verb{$Fr}, and \verb{$Nmedian}.
 }
 \description{
 Assuming a log-normal distribution of abundance estimates.

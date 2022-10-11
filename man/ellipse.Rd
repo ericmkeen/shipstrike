@@ -7,22 +7,23 @@
 ellipse(x, y, width, height = width, theta = 0, npoints = 10, plot = FALSE)
 }
 \arguments{
-\item{x}{desc}
+\item{x}{Center x coordinate of ellipse.}
 
-\item{y}{desc}
+\item{y}{Center y coordinate of ellipse.}
 
-\item{width}{desc}
+\item{width}{Width of ellipse.}
 
-\item{height}{desc}
+\item{height}{Length of ellipse.}
 
-\item{theta}{desc}
+\item{theta}{Angle/heading.}
 
-\item{npoints}{desc}
+\item{npoints}{Number of vertices to use to define the ellipse boundary.}
 
-\item{plot}{desc}
+\item{plot}{Boolean; print a diagnostic plot?}
 }
 \value{
-desc
+A list with three slots: \code{coords} (a \code{data.frame} of coordinates
+defining ellipse boundary), \code{center} (the \code{x} and \code{y} inputs), and \code{theta} (the input angle).
 }
 \description{
 Draw an ellipse

@@ -1,11 +1,15 @@
 #' Produce a P(Lethality) ~ Speed curve
 #'
-#' @param speeds  desc
-#' @param c1  desc
-#' @param c2  desc
-#' @param asymptote desc
+#' This function returns the Probability of Lethality for a range of speeds based on
+#' a logistic function of form: `P(Lethality) = asymptote/ (1 + exp(-1*(c1 + (c2*speeds))))`.
+#' The defaults are the values used in *Keen et al. (2023)* for large ships > 180m.
 #'
-#' @return
+#' @param speeds  A vector of speeds at which to predict P(Lethality).
+#' @param c1  First parameter
+#' @param c2  Second parameter
+#' @param asymptote Upper asymptote of the function.
+#'
+#' @return A `data.frame`.
 #' @export
 #'
 lethality_curve <- function(speeds = seq(0, 30, length=1000),

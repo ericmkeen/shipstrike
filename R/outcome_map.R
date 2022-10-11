@@ -1,19 +1,23 @@
 #' Plot map of outcomes
 #'
-#' @param outcomes_grid  desc
-#' @param base_map  desc
-#' @param varplot  desc
-#' @param varfacet desc
-#' @param spp  desc
-#' @param years  desc
-#' @param channels  desc
-#' @param vessels  desc
-#' @param months  desc
-#' @param diels  desc
-#' @param col_min  desc
-#' @param col_max  desc
+#' This function produces a map of a risk metric.
+#' The default is to show cooccurrences for all month-diel-vessels.
 #'
-#' @return
+#' @param outcomes_grid  The `outcomes_grid` output from `outcome_predict()`.
+#' @param base_map  Base map, provided as a `ggplot2` object. The default is to
+#' use `bangarang::gg_kfs()` of the Kitimat Fjord System (BC, Canada).
+#' @param varplot  The variable to plot. See output of `outcome_predict()`.
+#' @param varfacet The variable by which to facet, if any.
+#' @param spp  Species to filter by.
+#' @param years  Year to filter by.
+#' @param channels  `channel` to filter by.
+#' @param vessels  `vessels` to filter by.
+#' @param months  `months` (numerics) to filter by.
+#' @param diels  Diel period `"night"` or `"day"`).
+#' @param col_min  Specify minimum color of color gradient scale.
+#' @param col_max  Specify maximum color of color gradient scale.
+#'
+#' @return A `ggplot` object.
 #' @export
 #' @import dplyr
 #' @import ggplot2

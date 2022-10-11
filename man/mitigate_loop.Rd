@@ -15,17 +15,24 @@ mitigate_loop(
 )
 }
 \arguments{
-\item{outcomes}{desc}
+\item{outcomes}{The result of \code{outcome_predict()}.}
 
-\item{mitigation_duration}{desc}
+\item{mitigation_duration}{Number indicating the number of months to use as a mitigation period.
+Keen et al. (2023) tests durations of 1, 2, and 3 months.}
 
-\item{reschedule}{desc}
+\item{reschedule}{Boolean, with default \code{FALSE}, indicating whether traffic during the mitigation window
+should be rescheduled (\code{reschedule == TRUE}) or cancelled (\verb{FALSE)}.}
 
-\item{vessels}{desc}
+\item{vessels}{A character vector indicating for which vessel types this mitigation action applies.}
 }
 \value{
-desc
+See the \code{shipstrike} package vignette & Keen et al. (2023) for details.
 }
 \description{
-Loop through months to find most efficacious mitigation window
+To test the effects of seasonally displacing ship traffic
+(i.e., rescheduling transits from a given month into other months)
+\emph{or} seasonally cancelling ship traffic
+(i.e., a moratorium), you can use the \code{shipstrike} function \code{mitigate_loop()},
+which applies the displacement window to each candidate month in a loop.
+This allows us to determine which month would be the most efficacious target for mitigation.
 }

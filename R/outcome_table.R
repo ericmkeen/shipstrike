@@ -1,8 +1,11 @@
 #' Tabular summary of ship strike outcomes
 #'
+#' This function summarizes the predictions for each stage
+#' of whale-vessel interaction, from cooccurrence to mortality.
+#'
 #' @param outcomes A `data.frame` of results from the `shipstrike::gather_outcomes()` function.
 #'
-#' @return
+#' @return A `data.frame`. See the output of `outcome_predict()`.
 #' @export
 #'
 outcome_table <- function(outcomes){

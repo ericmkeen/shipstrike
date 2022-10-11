@@ -2,7 +2,7 @@
 % Please edit documentation in R/outcome_melt.R
 \name{outcome_melt}
 \alias{outcome_melt}
-\title{Outcome melt}
+\title{Melt the result of \code{predict_outcomes()} to use with \code{tidyverse} verbs.}
 \usage{
 outcome_melt(
   mr,
@@ -13,13 +13,15 @@ outcome_melt(
 )
 }
 \arguments{
-\item{mr}{desc}
+\item{mr}{A \code{data.frame} of results from the \code{shipstrike::gather_outcomes()} function.}
 
-\item{events}{desc}
+\item{events}{A character vector of outcome types to retain in the melted dataset.}
 }
 \value{
-desc
+A melted \code{data.frame}
 }
 \description{
-Outcome melt
+This function may be handy if you want to conduct your own tailored analyses.
+It melts the results data into a tidyverse-friendly format in which every row
+is a single prediction. Every function above calls this function internally.
 }

@@ -1,0 +1,2035 @@
+---
+title: "`shipstrike`"
+author: "Eric Keen"
+output: 
+  rmdformats::readthedown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Eric Keen  
+
+*Science co-director, North Coast Ceteacean Society*  
+
+*Sewanee: The University of the South*  
+
+# Introduction
+
+The `R` package `shipstrike` offers utilities for spatially- and temporally-explicit predictions of whale-ship interactions and collisions. Its chief asset is its modular design, allowing researchers to parse the ship-strike analysis process - which can be  complex -- into discrete stages while still propagating uncertainty from every stage into the final result. 
+
+The package was developed into two stages: first, in association with this [paper](https://www.sciencedirect.com/science/article/pii/S0964569122001582?casa_token=peSyRDb29QEAAAAA:5AoBuRJ62I3tKNLaMecNix4c4L42P0OfMbPmtt7Y1UbeJNB7KT0CL_T6vqpYacKh5hIvV6wDhw), which focused on the close-encounter rate simulation tools in `shipstrike`. The vignette originally published in tandem with that paper can be found [here](https://www.dropbox.com/s/hd7517tjg0xsviw/The%20shipstrike%20encounter%20rate%20simulator.pdf?dl=0). We now publish the second version of the package in association with a forthcoming publication predicting ship-strike rates in the territorial waters of the Gitga'at First Nation. The link to that study -- which we shall refer to as *Keen et al. (2023)* -- will be provided once it is published.  
+
+The `shipstrike` framework involves the following analytical steps: 
+
+(1) **Cooccurrences:** To predict whale-vessel interaction rates, first prepare spatial grids of vessel traffic, density surface models of whale density, and seasonal models of whale abundance to predict the number of times in which a vessel and a whale occur in the same square km (hereafter, a ‘cooccurrence’).   
+
+(2) **Close encounters:** Second, cooccurrences are scaled by a ‘close-encounter’ rate, i.e., the rate at which a vessel and whale are expected to intersect in time and horizontal space assuming no avoidance measures are taken. The close-encounter rate is estimated using simulations that draw upon size and travel patterns for both actors. 
+
+(3) **Strike-zone events:** Third, close encounters are scaled according to vessel draft and whale depth distribution, which we inferred using whale-born time-depth-recording tags, to estimate the number of ‘strike-zone events’, i.e., the times in which the whale and vessel will collide unless avoidance measures are taken. 
+
+(4) **Collisions**: To predict collisions, strike-zone events are scaled according to an avoidance rate that was modeled as a function of vessel speed (Gende et al. 2011, Rockwood et al. 2017).
+
+(5) **Mortality**: Finally, the number of collisions is scaled by the lethality rate, which we also model using equations from the ship-strike literature (Kelley et al. 2020), to predict the number of whale mortalities.  
+
+This analysis requires a variety of datasets, and most of the work ends up being in the preparation of those datasets. The general workflow for preparing and implementing a ship-strike analysis with `shipstrike` looks something like this:
+
+(1) Prepare a spatial grid.  
+
+(2) Prepare marine traffic data.  
+
+(3) Prepare whale density surface.  
+
+(4) Prepare whale seasonal abundance curve.  
+
+(5) Estimate close-encounter rates.  
+
+(6) Predict whale-ship interaction rates & vessel strikes.  
+
+Here we demonstrate that workflow and the features of `shipstrike` using *Keen et al. (2023)* as a case study. The code below replicates the analysis therein.  
+
+
+## Installation
+
+The package can be installed directly from `Github`: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Make sure you have "devtools" installed
+if (!require('devtools')) install.packages('devtools')
+
+# Install from GitHub
+devtools::install_github('ericmkeen/shipstrike')
+```
+
+Now load the package: 
+```{r, echo=TRUE, eval=FALSE, include=TRUE, message=FALSE, warning=FALSE}
+library(shipstrike)
+```
+
+```{r, echo=FALSE, eval=TRUE, include=TRUE, message=FALSE, warning=FALSE}
+library(devtools)
+document()
+```
+
+## Other dependencies
+
+The analysis from *Keen et al. (2023)* will rely on other packages as well:  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE, warning=FALSE, message=FALSE}
+library(readr)
+library(dplyr)
+library(devtools)
+library(lubridate)
+library(ggplot2)
+library(knitr)
+```
+
+The analysis will also rely upon utilities specific to its study area, the Kitimat Fjord System (British Columbia, Canada), which are provided in the R package `bangarang` (also available on `Github`):  
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE, warning=FALSE, message=FALSE}
+devtools::install_github('ericmkeen/bangarang')
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE, warning=FALSE, message=FALSE}
+library(bangarang)
+```
+
+*** 
+
+# Spatial grid
+
+In `shipstrike`, the foundation of your analysis will be a spatial grid of your study area. 
+
+The 1-km2 grid used in *Keen et al. (2023)* is provided as a built-in package dataset:
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(grid_kfs, package='shipstrike')
+head(grid_kfs)
+```
+
+In this `data.frame`, each row is a grid cell. The essential fields are `y1` (lower bound of cell, in decimal degrees), `y2` (right bound), `y` (latitudinal center), `x1` (left bound), `x2` (right bound), `x` (longitudinal center), `km2` (the area of the cell, in square km), and `id` (a unique identifier). The `block` field is also necessary if your study area is split into distinct regions that you want to analyze separately. In our case, we wanted to investigate risk differences across 8 different waterways in the Kitimat Fjord System. The other `z...` fields are only necessary if needed for density surface modeling, which we will not cover here. 
+
+The `grid_kfs` object was produced using the `shipstrike` function `make_grid()`: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE, message=FALSE, warning=FALSE}
+grid_kfs <- make_grid(xlims = c(-129.75, -128.5),
+                      ylims = c(52.75, 54.1),
+                      grid_int = 1.287)
+```
+
+```{r, echo=FALSE, eval=TRUE, include=FALSE, message=FALSE, warning=FALSE}
+grid_kfs <- make_grid(xlims = c(-129.75, -128.5),
+                      ylims = c(52.75, 54.1),
+                      grid_int = 1.287)
+```
+
+This function produces a `data.frame` for a rectangular grid of cells. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE, warning=FALSE, message=FALSE}
+bangarang::gg_kfs() + 
+  geom_point(data=grid_kfs, mapping=aes(x=x, y=y), size=.5)
+```
+
+Any cell that occurs on land (mainland or islands) needs to be removed. We did so using the `bangarang` functions `inKFS()` (determines whether a coordinate is inside the Kitimat Fjord System proper) and `inwater()` (determines whether a coordinate is on land or water) as well as some `bangarang` built-in datasets. 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Load datasets from `bangarang` pkg
+data(kfs_boundary)
+kfs <- kfs_boundary
+data(kfs_land)
+land <- kfs_land
+
+# Perform tests
+newgrids <- data.frame(x = grid_kfs$x, y = grid_kfs$y)
+newgrids$inkfs <- inKFS(newgrids,kfs,toplot=TRUE)$inkfs
+newgrids$inwater <- inwater(newgrids,land,toplot=TRUE)$valid
+
+# Update grid_kfs
+grid_kfs <-
+  newgrids %>%
+  dplyr::filter(inkfs == TRUE,
+                inwater == TRUE)
+```
+
+Our spatial grid now looks like this:  
+
+```{r, echo=FALSE, eval=TRUE, include=TRUE}
+data(grid_kfs)
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+bangarang::gg_kfs() + 
+  geom_point(data=grid_kfs, mapping=aes(x=x, y=y), size=.5)
+```
+
+*** 
+
+# Marine traffic
+
+In *Keen et al. (2023)*, we use both AIS observations of marine traffic *as well as* simulated marine traffic. 
+
+## AIS data
+
+The chief AIS dataset in *Keen et al. (2023)* is from 2019. The final polished version of that dataset is provided as a built-in dataset within `shipstrike`:  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(ais_2019)
+
+head(ais_2019)
+```
+
+This is what your AIS data will need to look like in order to proceed with using `shipstrike`. We prepared our AIS data using the following code.  
+
+### Read, filter, format, & re-group
+
+Read in the raw AIS data:
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE, message=FALSE, warning=FALSE}
+fn <- '/Users/erickeen/Dropbox/Other WIPs/NCCS/Projects/ship-strike/data/ais/AIS_2019_w_month.csv'
+df <- read_csv(fn)
+
+head(df)
+```
+
+Now filter out obviously erroneous and irrelevant entries, and reformat column names: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+ais <-
+  df %>%
+  dplyr::filter(SOG > 3,
+                SOG < 40,
+                Length > 5,
+                Length < 500) %>%
+  dplyr::filter(Longitude >= -129.68,
+                Longitude < -128.66,
+                Latitude >= 52.8,
+                Latitude < 53.55) %>%
+  dplyr::select(vid = id,
+                type = Type,
+                speed = SOG,
+                length = Length,
+                width = Beam,
+                draft = Draught,
+                datetime = UTC.Time,
+                x = Longitude,
+                y = Latitude) %>%
+  dplyr::mutate(datetime = lubridate::ymd_hm(datetime, tz='UTC'))
+
+# Fix obviously erroneous beam widths 
+# using a length conversion factor of 0.125
+bads <- which(ais$width < 2)
+ais$width[bads] <- NA
+bads <- which(is.na(ais$width))
+if(length(bads)>0){ais$width[bads] <- ais$length[bads] * 0.125}
+
+# Find invalid drafts
+# any draft 50% of length or deeper is invalid
+ld_ratio <- ais$draft / ais$length
+bads <- which(ld_ratio > 0.5)
+if(length(bads)>0){ais$draft[bads] <- NA}
+
+# Any draft less than 0.2m is also invalid
+bads <- which(ais$draft < .2)
+if(length(bads)>0){ais$draft[bads] <- NA}
+
+# Now fix invalid drafts
+# Use a 1-to-0.05 ratio as the conversion factor
+bads <- which(is.na(ais$draft))
+if(length(bads)>0){ais$draft[bads] <- ais$length[bads] * 0.05}
+```
+
+Note that AIS data rarely follows the exact same formatting, so you will likely need to modify the code above in order to achieve the desired outcome with your own AIS data. 
+
+Check out the AIS data sample size: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+# Number of records
+nrow(ais)
+
+# Number of unique vessel IDs
+ais$vid %>% unique %>% length
+```
+
+This dataset contains over 20 vessel types: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+(types <- ais$type %>% unique)
+```
+
+In *Keen et al. (2023)* we pool them into just 10 types: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+newtype <- rep('Other < 40m',times=nrow(ais))
+newtype[ais$length > 40] <- 'Other > 40m'
+newtype[ais$length > 100] <- 'Other > 100m'
+newtype[ais$type %in% types[c(9)] & ais$length < 40] <- 'Pleasurecraft < 40m'
+newtype[ais$type %in% types[c(4, 7)] & ais$length < 50] <- 'Towing < 50m'
+newtype[ais$type %in% types[c(3)] & ais$length < 50] <- 'Tug < 50m'
+newtype[ais$type %in% types[c(2, 17)] & ais$length >= 180] <- 'Passenger > 180m'
+newtype[ais$type %in% types[c(5, 21)] & ais$length >= 180] <- 'Cargo > 180m'
+newtype[ais$type %in% types[c(13)]] <- 'Sailing'
+newtype[ais$type %in% types[c(6)] & ais$length < 60] <- 'Fishing < 60m'
+
+# Update with new type categories
+ais$type <- newtype
+```
+
+New vessel type names:  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+ais$type %>% unique
+```
+
+Now summarize the AIS dataset by vessel type, using the `shipstrike` function `ais_table()`: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+ais_table(ais) 
+```
+
+### Interpolate the vessel grid
+
+Now that the data are clean and re-grouped, we can proceed with data processing.  First we interpolate vessel position fixes and associate each interpolated fix to a grid cell, using a function from `shipstrike`. In the result, each row is an interpolated vessel position fix. This process can take several minutes. 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+vgrid <- vessel_grid(grid_kfs, ais)
+```
+
+We then used the grid cell to assign each vessel position fix to a waterway in our study area, by joining to our spatial grid: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+grid_join <- grid_kfs %>% select(grid_id = id, channel = block)
+vgrid2 <- left_join(vgrid, grid_join, by='grid_id')
+```
+
+### Determine sun angle
+
+Now add columns for the elevation of the sun during each record, using a `shipstrike` function:
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+vgrid2$sun <- vessel_sun_angle(vgrid2, verbose=TRUE)
+```
+
+We can then use solar elevation to determine which events occur during day (sun >= -12 degrees, which is nautical dawn/dusk) and which during night (sun < -12 degrees).
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+vgrid2$diel <- 'day'
+vgrid2$diel[vgrid2$sun < -12] <- 'night' # nautical dawn/dusk
+```
+
+Your AIS dataset is now ready for use in subsequent `shipstrike` functions. Again, note that the package provides a built-in version of this dataset: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(ais_2019)
+
+# Map it
+gg_kfs() + 
+  geom_point(data= ais_2019 %>% group_by(grid_id) %>% 
+               summarize(n=n(), x=x[1], y=y[1]),
+             mapping=aes(x=x,y=y,color=sqrt(n))) + 
+  scale_colour_gradient(low='white', high='firebrick')
+```
+
+We use this exact same code to produce datasets for AIS data in 2014, 2015, and 2018.  
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+data(ais_2014)
+data(ais_2015)
+data(ais_2018)
+```
+
+## Simulated traffic
+
+In *Keen et al. (2023)*, we simulate traffic from two LNG-trafficking projects: (1) LNG Canada and (2) Cedar LNG. Both of these shipping projects use the exact same route:  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(tanker_route) # from `bangarang` package
+tanker_route %>% head
+
+bangarang::gg_kfs() +
+  geom_point(data=tanker_route, mapping=aes(x=x, y=y))
+```
+
+See the *Keen et al.* study for all references. 
+
+### LNG Canada
+
+The LNG Canada project will involve 350 ship calls to the Port of Kitimat: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+new_calls <- 350
+```
+
+The dimensions of these ships will vary slightly throughout their fleet. The possibilities are provided in this `data.frame`: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+(vessel_options <- data.frame(length = c(290, 298, 286, 288, 286),
+                              width = c(45, round((298/315)*50), 43, 44, 41),
+                              draft = c(12, 12, 11.9, 11.5, 11.8)))
+```
+
+These ship calls will be evenly distributed throughout the year, and the exit transit ('in product') will always occur one day after the entry transit ('in heel'): 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+(julians <- sample(1:365, size=new_calls, replace=FALSE) %>% sort)
+julian_product <- julians + 1
+```
+
+First we will simulate transits for the in-heel entry transits: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Arrange tanker route coordinates in reverse order
+traffic <-
+    tanker_route %>%
+    select(x, y) %>%
+    mutate(id = 1:n()) %>%
+    arrange(desc(id))
+
+# Loop through each transit
+heels <- data.frame()
+t0 <- lubridate::as_datetime('2030-01-01 00:00:01', tz='UTC')
+for(i in 1:length(julians)){
+  traffi <- traffic
+  (start_time <- t0 + lubridate::days(julians[i]) + lubridate::seconds(sample(1:86400, 1)))
+
+  # Specify speed along route, randomly drawn from a uniform distribution
+  (speedi <- runif(1,8,14))
+  traffi$speed <- speedi
+
+  # Add slight course variability
+  (delta_y <- rnorm(1, 0, .002))
+  traffi$y <- traffi$y + delta_y
+  (delta_x <- rnorm(1, 0, .002))
+  traffi$x <- traffi$x + delta_x
+
+  # Compile a dataframe of position fixes
+  (xy <- data.frame(lat1 = traffi$y[1:(nrow(traffi)-1)],
+                    lon1 = traffi$x[1:(nrow(traffi)-1)],
+                    lat2 = traffi$y[2:(nrow(traffi))],
+                    lon2 = traffi$x[2:(nrow(traffi))]))
+  
+  # Determine the distance between each position fix
+  (nmi <- apply(xy, 1, function(x){swfscMisc::distance(x[1],x[2],x[3],x[4], units='nm')}))
+  (kms <- nmi * 1.852)
+  kms <- c(kms,0.1)
+  traffi$km <- kms
+  
+  # Simulate timestamps for each fix
+  (traffi$hours <- traffi$km / (traffi$speed * 1.852))
+  (traffi$tot_hours <- cumsum(traffi$hours))
+  traffi$datetime <- start_time + lubridate::seconds(round(3600*traffi$tot_hours))
+  traffi$datetime
+  head(traffi)
+
+  # Select LNG ship dimension
+  (vessi <- vessel_options[sample(1:nrow(vessel_options), size = 1),])
+
+  # Format to match AIS data expectation
+  ais <-
+    traffi %>%
+    mutate(type = 'LNG Canada tanker in-heel',
+           length = vessi$length,
+           width = vessi$width,
+           draft = vessi$draft,
+           vid = i) %>%
+    dplyr::filter(x >= -129.68,
+                  x < -128.66,
+                  y >= 52.8,
+                  y < 53.55) %>%
+    dplyr::select(vid,
+                  type,
+                  speed,
+                  length,
+                  width,
+                  draft,
+                  datetime,
+                  x,
+                  y)
+
+  heels <- rbind(heels, ais)
+  message(i)
+}
+```
+
+Now do the same for in-product transits:  
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+traffic <-
+   tanker_route %>%
+   select(x, y, speed) %>%
+   mutate(id = 1:n())) 
+
+products <- data.frame()
+t0 <- lubridate::as_datetime('2030-01-01 00:00:01', tz='UTC')
+for(i in 1:length(julian_product)){
+  traffi <- traffic
+  (start_time <- t0 + lubridate::days(julian_product[i]) + lubridate::seconds(sample(1:86400, 1)))
+
+  (speedi <- runif(1,8,14))
+  traffi$speed <- speedi
+
+  (delta_y <- rnorm(1, 0, .002))
+  traffi$y <- traffi$y + delta_y
+  (delta_x <- rnorm(1, 0, .002))
+  traffi$x <- traffi$x + delta_x
+
+  (xy <- data.frame(lat1 = traffi$y[1:(nrow(traffi)-1)],
+                    lon1 = traffi$x[1:(nrow(traffi)-1)],
+                    lat2 = traffi$y[2:(nrow(traffi))],
+                    lon2 = traffi$x[2:(nrow(traffi))]))
+  
+  (nmi <- apply(xy, 1, function(x){swfscMisc::distance(x[1],x[2],x[3],x[4], units='nm')}))
+  (kms <- nmi * 1.852)
+  kms <- c(kms,0.1)
+  traffi$km <- kms
+  
+  (traffi$hours <- traffi$km / (traffi$speed * 1.852))
+  (traffi$tot_hours <- cumsum(traffi$hours))
+  traffi$datetime <- start_time + lubridate::seconds(round(3600*traffi$tot_hours))
+  traffi$datetime
+  
+  # Get dimensions based on corresponding in-heel transit
+  (heeli <- heels[heels$vid == i, 4:6])
+  vessi <- heeli[!duplicated(heeli),]
+
+  ais <-
+    traffi %>%
+    mutate(type = 'LNG Canada tanker in-product',
+           length = vessi$length,
+           width = vessi$width,
+           draft = vessi$draft,
+           vid = i) %>%
+    dplyr::filter(x >= -129.68,
+                  x < -128.66,
+                  y >= 52.8,
+                  y < 53.55) %>%
+    dplyr::select(vid,
+                  type,
+                  speed,
+                  length,
+                  width,
+                  draft,
+                  datetime,
+                  x,
+                  y)
+  ais %>% head
+  products <- rbind(products, ais)
+  message(i)
+}
+```
+
+Now we account for the escort tugs that will accompany these ships: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+tug_length <- 35
+4/27 # width:length ratio from AIS 2019 tugs
+tug_width <- (4 / 27)* 35
+tug_draft <- 3.1 # mead draft from AIS 2019 tugs
+
+tug_heels <- heels
+tug_heels$type <- 'LNG Canada tug in-heel'
+tug_heels$length <- tug_length
+tug_heels$width <- tug_width
+tug_heels$draft <- tug_draft
+
+tug_product <- products
+tug_product$type <- 'LNG Canada tug in-product'
+tug_product$length <- tug_length
+tug_product$width <- tug_width
+tug_product$draft <- tug_draft
+```
+
+We combine all transits into the same `ais` object: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+ais <- rbind(heels, products, tug_heels, tug_product)
+```
+
+Now we proceed with the exact same processing steps as used with actual AIS data: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Interpolate vessel grid
+vgrid <- vessel_grid(grid_kfs, ais, verbose=TRUE)
+
+# Join channel to each grid number
+grid_join <- grid_kfs %>% select(grid_id = id, channel = block)
+vgrid2 <- left_join(vgrid, grid_join, by='grid_id')
+
+# Add sun angles
+vgrid2$sun <- vessel_sun_angle(vgrid2, verbose=TRUE)
+vgrid2$diel <- 'day'
+vgrid2$diel[vgrid2$sun < -12] <- 'night' # nautical dawn/dusk
+```
+
+We provide this simulated LNG Canada dataset as a built-in dataset in `shipstrike`: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(lng_canada)
+
+# Map it
+gg_kfs() + 
+  geom_point(data= lng_canada %>% group_by(grid_id) %>% 
+               summarize(n=n(), x=x[1], y=y[1]),
+             mapping=aes(x=x,y=y,color=sqrt(n))) + 
+  scale_colour_gradient(low='white', high='firebrick')
+```
+
+### Cedar LNG
+
+We perform the exact same procedure for the Cedar LNG project, the only differences being that we expect only 50 ship calls regularly spaced throughout the year for this project. 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Total tankers expected
+new_calls <- 50
+
+# Get calendar dates of transits
+set.seed(126)
+(spacing <- sample(5:9, size=new_calls, replace=TRUE))
+(julians <- cumsum(spacing))
+julian_product <- julians + 1
+```
+
+We also provide this simulated Cedar LNG traffic as a built-in dataset: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+data(cedar_lng)
+```
+
+*** 
+
+# Fin whales
+
+*Keen et al. (2023)* predicts whale-ship interactions for fin whales first, then humpback whales second. 
+
+## Whale density surface
+
+*Keen et al. (2023)* use a density surface model to prepare a density surface for fin whales. That dataset looks like this: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+load('../tests/fw/dsm-estimate.RData')
+grids %>% head
+```
+
+Essentially, it is the `data(grid_kfs)` dataset with a single new column: `d_mean`, providing the season-wide mean density expected for each respective grid cell.  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+gg_kfs() + 
+  geom_point(data=grids, mapping=aes(x=x, y=y, color=d_mean)) + 
+  scale_colour_gradient(low='white', high='firebrick')
+```
+
+*Keen et al. (2023)* uses a bootstrapping routine to develop uncertainty distributions for each grid cell estimate:  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+load('../tests/fw/dsm-bootstraps.RData')
+bootstraps %>% head
+```
+
+This dataset has 1,000 estimates of `D` for each `grid_id`.  Note that `month` is set to `0` because this density estimate for the entire summer season. 
+
+## Whale seasonal abundance curve
+
+*Keen et al. (2023)* uses a seasonal abundance model to scale the fin whale density surface, which shows average density from June to September, for each month of the year. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+load('../tests/fw/seasonal_posterior.RData')
+seasonal_boot %>% head(12)
+
+# Plot it
+ggplot(seasonal_boot, 
+       aes(x=factor(month), y=scaled)) + 
+  geom_jitter(alpha=.1) +
+  geom_hline(yintercept=1, lty=3, col='blue') 
+```
+
+This dataset provides a scaling factor (column `scaled`) for each `month`, which is used to scale the season-wide density estimate to predict whale density in a given month. This dataset contains 1,000 bootstrap iterations (column `iteration`) of these estimates.  
+
+## Close-encounter rates
+
+To demonstrate the close-encounter rate estimation process, we will use the LNG Canada traffic:
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+data(lng_canada)
+```
+
+Whale dimensions and movement parameters are specified using the `shipstrike` functions `fin_params()` -- which uses as defaults the values from *Keen et al.* for fin whales -- or `humpback_params` -- which provides humpback whale values as defaults. Either function can be used to define new parameters of your own.   
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+fin_params()
+```
+
+The `shipstrike` function for creating simulations that estimates the close-encounter rate is `encounter_rate()`. To demonstrate this function, we conduct only 1 run of the simulator (100 iterations per run). The simulator will return an encounter rate estimate for each vessel-month-diel scenario. The diagnostic plot shows each iteration wtihin the run (black lines = whale tracks; blue line up center = ship track; large red dots = close-encounters).
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+mr <- encounter_rate(vessels = lng_canada,
+                     whales = fin_params(),
+                     outcome_dir = 'tests/',
+                     month_batches = list(all = 1:12),
+                     runs  = 1, 
+                     iterations = 100, 
+                     toplot = TRUE)
+```
+
+
+To explore these results more closely, `shipstrike` will return a highly detailed `data.frame` when `encounter_rate()` is called with a single run (`runs` argument is `1`).  You can then pass that dataframe to the `shipstrike` function named `encounter_diagnostics()`, which will step through each iteration and display a detailed series of plots. Here is one example: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+# Lots of details:
+mr %>% nrow
+
+# Filter to single vessel type and diel period
+mri <- mr %>% filter(type=='LNG Canada tanker in-heel',
+                         diel=='day')
+
+# Try out diagnostics for last iteration in run
+ggenc <- encounter_diagnostics(mri, id=100)
+```
+
+Here is the code for running the full fin whale close-encounter rate analysis as done in *Keen et al. (2023)*: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Vessels 2019
+data(ais_2019) 
+encounter_rate(vessels = ais_2019, 
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/ais_2019/',
+               month_batches = list(winter = c(0:4, 11:12),
+                                    summer = 5:10),
+               runs  = 100, iterations = 100, toplot = FALSE)
+
+# Vessels 2015
+data(ais_2015)
+encounter_rate(vessels = ais_2015,
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/ais_2015/',
+               month_batches = list(winter = c(0:4, 11:12),
+                                    summer = 5:10),
+               runs  = 100, iterations = 100, toplot = FALSE)
+
+# LNG Canada
+data(lng_canada) 
+encounter_rate(vessels = lng_canada, 
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/lng_canada/',
+               month_batches = list(all = 1:12),
+               runs  = 100, iterations = 100, toplot = FALSE)
+
+# Cedar LNG
+data(cedar_lng) 
+encounter_rate(vessels = cedar_lng, 
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/cedar_lng/',
+               month_batches = list(all = 1:12),
+               runs  = 100, iterations = 100, toplot = FALSE)
+```
+
+Note that the function is saving results to a file named `p_encounter.RData` within the directory specified by the argument `outcome_dir`. The result looks like this: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+penc <- readRDS('../tests/fw/lng_canada/p_encounter.RData')
+penc %>% head(10)
+
+# Plot it
+ggplot(penc, 
+       aes(x=p_encounter, fill=type, color=type)) + 
+  geom_density(alpha=.5)
+```
+
+## Ship-strike analysis
+
+To predict whale-ship interaction outcomes, use the `shipstrike` function `outcome_predict()`. This function requires the following datasets: 
+
+(1) **Marine traffic grid:** prepared above.
+
+(2) **Whale density surface** (either a single estimate or iterated bootstraps): shown above.
+
+(3) **Close-encounter rate** distribution: prepared above.
+
+(4) **Whale depth distribution**: we provide the fin whale depth distribution used in *Keen et al. (2023)* as a built-in dataset for `shipstrike`:  
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(p_surface)
+p_surface %>% head(10)
+
+# Plot it
+ggplot(p_surface, aes(y=z, x=p_mean, color=diel)) + 
+  geom_point() + ylim(250, 0)
+```
+
+(5) Model parameters for the logistic relationship between **P(Collision)** and vessel speed: we provide the model parameters used in *Keen et al. (2023)* as a `shipstrike` dataset: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(p_collision)
+p_collision[4,]
+```
+
+You can explore this model and/or develop your own version of it using the helper function, `collision_curve()`, which provides *P(Collision)* at every speed from 0 to 30 knots (this can be changed using the function arguments) according to the model parameters `c1`, `c2`, and `asymptote`. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+collision_curve() %>% head
+
+# Plot it
+ggplot(collision_curve(), aes(x=speed, y=Pcollision)) + 
+  geom_line(lwd=2, color='firebrick') + 
+  ylim(0,1)
+```
+
+(6) Model parameters for the logistic relationship between **P(Lethality)** and vessel speed: we provide the model used in *Keen et al. (2023)* as a `shipstrike` dataset: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+data(p_lethality)
+p_lethality[4,]
+```
+
+Similar to above, you can explore this model and/or develop your own version of it using the helper function, `lethality_curve()`, which provides *P(Lethality)* at every speed from 0 to 30 knots (this can be changed using the function arguments) according to the model parameters `c1`, `c2`, and `asymptote`. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+lethality_curve() %>% head
+
+# Plot it
+ggplot(lethality_curve(), aes(x=speed, y=Plethality)) + 
+  geom_line(lwd=2, color='firebrick') + 
+  ylim(0,1)
+```
+
+&nbsp;  
+
+Below is the code that replicates the fin whale analysis in *Keen et al. (2023)*:  
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Common datasets to all analyses ==============================================
+species <- 'fw'
+
+load('tests/fw/dsm-bootstraps.RData')
+whale <- bootstraps
+
+load('tests/fw/seasonal_posterior.RData')
+seasonal <- seasonal_boot
+
+
+# 2019 traffic  ================================================================
+
+data(ais_2019)
+outcome_predict(traffic = ais_2019,
+                scale_factors=NULL,
+                whale = whale,
+                seasonal = seasonal,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/fw/ais_2019/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = 'fw',
+                year = 2019,
+                iterations = 1000)
+
+
+# 2015 traffic  ================================================================
+
+data(ais_2015)
+outcome_predict(traffic = ais_2015,
+                scale_factors=NULL,
+                whale = whale,
+                seasonal = seasonal,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/fw/ais_2015/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = 'fw',
+                year = 2015,
+                iterations = 1000)
+
+# 2030 traffic =================================================================
+
+data(ais_2019) 
+scale_factors <- readRDS('tests/ais/vessel_trends.RData')
+outcome_predict(traffic = ais_2019,
+                scale_factors=scale_factors,
+                whale = whale,
+                seasonal = seasonal,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/fw/ais_2030/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = 'fw',
+                year = 2030,
+                iterations = 1000)
+
+
+# LNG Canada (8 - 14 knots)  ===================================================
+
+data(lng_canada) 
+traffic <- lng_canada
+vessels <- unique(traffic$type)
+
+# Prepare avoidance / lethality models to recognize LNG traffic
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+
+avoidance <- avoidance[c(2,4),]
+avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                    paste(vessels[1:2], collapse=' | '))
+
+lethality <- lethality[c(2,4),]
+lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                    paste(vessels[1:2], collapse=' | '))
+
+# Run outcome predictions
+outcome_predict(traffic = lng_canada,
+                scale_factors=NULL,
+                whale = whale,
+                seasonal = seasonal,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/fw/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = 'fw',
+                year = 2030,
+                iterations = 1000)
+
+# Cedar LNG (8 - 14 knots)  ====================================================
+
+data(cedar_lng) 
+traffic <- cedar_lng
+vessels <- unique(traffic$type)
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+
+avoidance <- avoidance[c(2,4),]
+avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | '))
+
+lethality <- lethality[c(2,4),]
+lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | '))
+
+# Run outcome predictions
+outcome_predict(traffic = cedar_lng,
+                scale_factors=NULL,
+                whale = whale,
+                seasonal = seasonal,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/fw/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = 'fw',
+                year = 2030,
+                iterations = 1000)
+```
+
+A few details of note:  
+
+- Predictions will be saved in two files: `outcomes.RData` (all predictions for each iteration, summed across the spatial grid, and `outcomes_grid.RData` (the spatial grid of predictions) within the directory specified by the `output_dir` argument.  
+
+- The argument `asymptote_scaling` can be used to manually scale the asymptotes of the collision and lethality models; for example, if the *P(Collision)* asymptote is 0.9 and `asymptote_scaling` is set to `0.5`, the *P(Collision)* asymptote will be modified to `0.45`.  
+
+- The argument `scale_factors` can be used to increase/decrease the number of transits for each vessel type within `traffic`. This is how we use 2019 traffic data to predict 2030 AIS traffic.  That `scale_factors` object looks like this: 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+scale_factors <- readRDS('../tests/ais/vessel_trends.RData')
+scale_factors
+```
+
+The only required fields are `type` and `scale_factor`. 
+
+
+Finally, we combine all of our fin whale results into a single list, to make them easier to find and use later:  
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+fw <- list(params = fin_params(),
+           p_encounter = list(ais_2015 = readRDS('tests/fw/ais_2015/p_encounter.RData'),
+                              ais_2019 = readRDS('tests/fw/ais_2019/p_encounter.RData'),
+                              lng_canada = readRDS('tests/fw/lng_canada/p_encounter.RData'),
+                              cedar_lng = readRDS('tests/fw/cedar_lng/p_encounter.RData')),
+           outcomes = list(ais_2015 = readRDS('tests/fw/ais_2015/outcomes.RData'),
+                           ais_2019 = readRDS('tests/fw/ais_2019/outcomes.RData'),
+                           ais_2030 = readRDS('tests/fw/ais_2030/outcomes.RData'),
+                           lng_canada = readRDS('tests/fw/lng_canada/outcomes.RData'),
+                           cedar_lng = readRDS('tests/fw/cedar_lng/outcomes.RData')),
+           grid = list(ais_2015 = readRDS('tests/fw/ais_2015/outcomes_grid.RData'),
+                       ais_2019 = readRDS('tests/fw/ais_2019/outcomes_grid.RData'),
+                       ais_2030 = readRDS('tests/fw/ais_2030/outcomes_grid.RData'),
+                       lng_canada = readRDS('tests/fw/lng_canada/outcomes_grid.RData'),
+                       cedar_lng = readRDS('tests/fw/cedar_lng/outcomes_grid.RData')))
+```
+
+## Results
+
+The `shipstrike` package provides a number of functions to aid in summarizing, visualizing, and interpreting the results of `outcome_predict()`. To demonstrate these functions, we'll focus on the predictions for all large ships in 2030 (AIS + LNG Canada + Cedar LNG): 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+large_ships <- c('Passenger > 180m', 'Cargo > 180m', 
+                 'LNG Canada tanker in-heel',
+                 'LNG Canada tanker in-product',
+                 'Cedar LNG tanker in-heel',
+                 'Cedar LNG tanker in-product')
+```
+
+```{r, echo=FALSE, eval=TRUE, include=FALSE}
+results <- rbind(readRDS('../tests/fw/ais_2030/outcomes.RData'),
+                 readRDS('../tests/fw/lng_canada/outcomes.RData'),
+                 readRDS('../tests/fw/cedar_lng/outcomes.RData'))
+
+results_grid <- rbind(readRDS('../tests/fw/ais_2030/outcomes_grid.RData'),
+                      readRDS('../tests/fw/lng_canada/outcomes_grid.RData'),
+                      readRDS('../tests/fw/cedar_lng/outcomes_grid.RData'))
+```
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Spatially summarized outcomes
+results <- rbind(fw$outcomes$ais_2030,
+                 fw$outcomes$lng_canada,
+                 fw$outcomes$cedar_lng) 
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+results %>% head
+
+# Filter to only large ships > 180m
+results <- results %>% filter(vessel %in% large_ships)
+```
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Spatially explicit outcomes (summed across iterations)
+results_grid <- rbind(fw$grid$ais_2030,
+                      fw$grid$lng_canada,
+                      fw$grid$cedar_lng)
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+results_grid %>% head
+
+# Filter to only large ships > 180m
+results_grid <- results_grid %>% filter(vessel %in% large_ships)
+```
+
+### `outcome_table()`
+
+This function summarizes the predictions for each stage of whale-vessel interaction, from cooccurrence to mortality. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+outcome_table(results)
+```
+
+The events with numbers can be read as follows: the first digit is the 'strike zone' scenario (1= 1x vessel draft, 2= 1.5x vessel draft); the second digit is the avoidance scenario (1 = P(Avoidance) is constant at 0.55; 2 = P(Avoidance) is a function of vessel speed; 3 = a deprecated duplicated of scenario 2; and 4 = No avoidance).  
+
+
+### `outcome_histograms()`
+
+This function produces pretty histograms of the posterior distributions of outcome predictions (the default is to only show the outcomes for scenarios in which strike zone is 1.5x draft and avoidance is a function of vessel speed).
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE, fig.height=8, fig.width=5}
+outcome_histograms(results)$simple
+```
+
+### `outcome_map()`
+
+This function produces a map of a risk metric. The default is to show cooccurrences for all month-diel-vessels. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE, warning=FALSE, message=FALSE}
+outcome_map(results_grid)
+```
+
+The default base map is of the Kitimat Fjord System (using the `bangarang` function `gg_kfs()`), but you can supply your own base map as an input.  
+
+### `outcome_shares()`
+
+This function uses a bootstrapping routine (described in *Keen et al. (2023)*) to estimate the share of risk attributable to each level for vessel type, channel, month, and diel period. It does this for each outcome type (cooccurrence, close encounter, ..., mortality). 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+shares <- outcome_shares(results)
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+shares$vessel 
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+shares$channel
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+shares$month
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+shares$diel
+```
+
+### `outcome_chances()`  
+
+This function predicts the chances of certain outcome severities. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+outcome_chances(results)
+```
+
+### `outcome_melt()`
+
+This function may be handy if you want to conduct your own tailored analyses. It melts the `results` data into a `tidyverse`-friendly format in which every row is a single prediction. Every function above calls this function internally. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+results_melted <- outcome_melt(results)
+
+results_melted %>% head
+```
+
+### `outcome_validation()`
+
+This function replicates the validation exercise from *Keen et al. (2023)* to determine what our strike detection rate would need to be in order for our results to be plausible given that we have never observed a strike in our study area. 
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+vali <- outcome_validation(results)
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+vali$L_plot
+```
+
+```{r, echo=TRUE, eval=TRUE, include=TRUE}
+vali$SDR_plot
+```
+
+
+## Mitigation  
+
+*Keen et al. (2023)* evaluates the efficacy of four main types of mitigation measures: speed reductions, daytime-only transits, seasonal displacement/rescheduling of ship transits, and seasonal moratoria on ship transits. 
+
+### Speed reductions 
+
+To test for the efficacy of speed reductions, *Keen et al.* compares measures focused solely upon new LNG traffic to measures applied to all large ships > 180m.  Changes in speed may effect both the close-encounter rate as well as the rate of collision/mortality.
+
+#### LNG-only
+
+First estimate the close-encounter rate with the new speed profile. This is possible using a convenience input, `new_speeds`, for the `encounter_rate()` function, which allows us to avoid re-simulating an entire new traffic scheme for LNG Canada.
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Encounter rate
+data(lng_canada)
+encounter_rate(vessels = lng_canada,
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/mitigation/1a/lng_canada/',
+               month_batches = list(all = 1:12),
+               new_speeds = runif(100, 7, 9),
+               runs  = 100, iterations = 100, toplot = TRUE)
+```
+
+We then pass these new encounter rates to the `outcome_predict()` function, making sure to also modify the speeds that will be used in predicting collision/lethality: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+load('tests/fw/dsm-bootstraps.RData')
+load('tests/fw/seasonal_posterior.RData')
+data(lng_canada)
+(vessels <- unique(lng_canada$type))
+data(p_surface)
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+# Modify speeds
+lng_canada_mod <- lng_canada
+lng_canada_mod$speed <- runif(nrow(lng_canada_mod), 7, 9)
+
+# Predict
+outcome_predict(traffic = lng_canada_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/fw/mitigation/1a/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+That was for LNG Canada. Now repeat for Cedar LNG: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Encounter rate
+data(cedar_lng)
+encounter_rate(vessels = cedar_lng,
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/mitigation/1a/cedar_lng/',
+               month_batches = list(all = 1:12),
+               new_speeds = runif(100, 7, 9),
+               runs  = 100, iterations = 100, toplot = TRUE)
+
+# Outcomes
+load('tests/fw/dsm-bootstraps.RData')
+load('tests/fw/seasonal_posterior.RData')
+data(cedar_lng)
+(vessels <- unique(cedar_lng$type))
+data(p_surface)
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+cedar_lng_mod <- cedar_lng
+cedar_lng_mod$speed <- runif(nrow(cedar_lng_mod), 7, 9)
+
+outcome_predict(traffic = cedar_lng_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/fw/mitigation/1a/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+#### All large-ship traffic
+
+To assess the effect of speed restrictions on *all* large ships, we re-run the 2019 AIS results, starting with `encounter_rate()`, using the arguments `speed_restriction` and `lengths_restricted` to specify that this restriction only applies to ships over 180m. 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Encounter rate: AIS 2030
+data(ais_2019)
+encounter_rate(vessels = ais_2019,
+               whales = fin_params(),
+               outcome_dir = 'tests/fw/mitigation/1b/ais_2030/',
+               month_batches = list(all = 1:12),
+               speed_restriction = 9,
+               lengths_restricted = 180,
+               runs  = 100, iterations = 100, toplot = FALSE)
+
+# Predict outcomes on AIS 2030 with < 9 kn
+load('tests/fw/dsm-bootstraps.RData')
+load('tests/fw/seasonal_posterior.RData')
+data(p_surface)
+data(ais_2019)
+scale_factors <- readRDS('tests/ais/vessel_trends.RData')
+data(p_collision)
+data(p_lethality)
+#
+# # Modify AIS data
+ais_2019_mod <- ais_2019
+bads <- which(ais_2019_mod$length > 180 & ais_2019_mod$speed > 9)
+ais_2019_mod$speed[bads] <- 9
+
+outcome_predict(traffic = ais_2019_mod,
+                scale_factors = scale_factors,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = 'tests/fw/mitigation/1b/ais_2030/',
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/fw/mitigation/1b/ais_2030/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species='fw',
+                year=2030,
+                iterations = 1000)
+```
+
+### Daytime-only transits
+
+For this mitigation measure, we do not need to re-run the encounter rate -- just outcome predictions.
+
+#### LNG only
+
+First for LNG Canada ... 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+load('tests/fw/dsm-bootstraps.RData')
+load('tests/fw/seasonal_posterior.RData')
+data(p_surface)
+data(lng_canada)
+(vessels <- unique(lng_canada$type))
+
+# Coerce all traffic to daytime
+lng_canada_mod <- lng_canada 
+lng_canada_mod$diel <- 'day'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+outcome_predict(traffic = lng_canada_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = 'tests/fw/lng_canada/',
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/fw/mitigation/2a/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+... then for Cedar LNG:
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+load('tests/fw/dsm-bootstraps.RData')
+load('tests/fw/seasonal_posterior.RData')
+data(p_surface)
+data(cedar_lng)
+(vessels <- unique(cedar_lng$type))
+
+# Coerce all traffic to daytime
+cedar_lng_mod <- cedar_lng 
+cedar_lng_mod$diel <- 'day'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+outcome_predict(traffic = cedar_lng_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = 'tests/fw/cedar_lng/',
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/fw/mitigation/2a/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+#### All large-ship traffic
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+load('tests/fw/dsm-bootstraps.RData')
+load('tests/fw/seasonal_posterior.RData')
+scale_factors <- readRDS('tests/ais/vessel_trends.RData')
+data(p_collision)
+data(p_lethality)
+data(p_surface)
+data(ais_2019)
+
+# Coerce all traffic to daytime
+ais_mod <- ais_2019 
+bads <- which(ais_mod$length > 180)
+ais_mod$diel[bads] <- 'day'
+
+outcome_predict(traffic = ais_mod,
+                scale_factors=scale_factors,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = 'tests/fw/ais_2019/',
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/fw/mitigation/2b/ais_2030/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = 'fw',
+                year = 2030,
+                iterations = 1000)
+```
+
+The mitigated outcomes for speed reductions and daytime transits have the exact same structure as the unmitigated ship-strike predictions, and all of the same `outcome_` results functions can be used to explore them. 
+
+
+### Seasonal displacement of LNG traffic
+
+To test the effects of seasonally displacing LNG traffic (i.e., rescheduling transits from a given month into other months), we use the `shipstrike` function `mitigate_loop()`, which applies the displacement window to each candidate month in a loop. This allows us to determine which month would be the most efficacious target for mitigation.  
+
+We specify that `reschedule` is `TRUE` to make it clear that we are displacing traffic during the mitigation window, not canceling it outright. 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Baseline scenario (no mitigation)
+results <- readRDS('tests/fw/results.RData')
+outcomes <- rbind(results$outcomes$lng_canda,
+                  results$outcomes$cedar_lng)
+
+# 3a	One month
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 1,
+                    reschedule = TRUE)
+mr
+saveRDS(mr, file='tests/fw/mitigation/3a/mitigation.RData')
+
+
+# 3b	Two months
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 2,
+                    reschedule = TRUE)
+saveRDS(mr, file='tests/fw/mitigation/3b/mitigation.RData')
+
+# 3c	Three months
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 3,
+                    reschedule = TRUE)
+saveRDS(mr, file='tests/fw/mitigation/3c/mitigation.RData')
+```
+
+
+The `mitigate_loop` function returns a list of results. For example: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Result of mitigate loop
+mr <- readRDS('../tests/fw/mitigation/3c/mitigation.RData')
+mr %>% names
+```
+
+The `$outcomes` slot is the result of `outcome_table` for each mitigation window (field `test`):
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+mr$outcomes
+```
+
+The `$chances` slot is the result of `outcome_chances()$at_least` for each mitigation window: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+mr$chances %>% head(10)
+```
+
+And the `$hist` slot provides all iterations of the `mortality2.2` outcome for each mitigation window: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+mr$hist
+
+ggplot(mr$hist, aes(x=test, y=outcome)) + 
+  geom_jitter(alpha = .3)
+```
+
+### Seasonal moratorium on LNG traffic
+
+To assess the effects of a sesonal moratorium, we use the same `mitigate_loop()` function, this time setting the `reschedule` argument to `FALSE`.  
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# 4a	One month
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 1,
+                    reschedule = FALSE)
+saveRDS(mr, file='tests/fw/mitigation/4a/mitigation.RData')
+
+# 4b	Two months
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 2,
+                    reschedule = FALSE)
+saveRDS(mr, file='tests/fw/mitigation/4b/mitigation.RData')
+
+# 4c	Three months
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 3,
+                    reschedule = FALSE)
+saveRDS(mr, file='tests/fw/mitigation/4c/mitigation.RData')
+```
+
+Now compile all of these results into a single list, for ease of access and use later on: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+mitigations <- list(m1 = list(lng_canada = list(p_encounter = readRDS('tests/fw/mitigation/1a/lng_canada/p_encounter.RData'),
+                                                outcomes = readRDS('tests/fw/mitigation/1a/lng_canada/outcomes.RData'),
+                                                grid = readRDS('tests/fw/mitigation/1a/lng_canada/outcomes_grid.RData')),
+                              cedar_lng = list(p_encounter = readRDS('tests/fw/mitigation/1a/cedar_lng/p_encounter.RData'),
+                                               outcomes = readRDS('tests/fw/mitigation/1a/cedar_lng/outcomes.RData'),
+                                               grid = readRDS('tests/fw/mitigation/1a/cedar_lng/outcomes_grid.RData')),
+                              ais_2030 = list(p_encounter = readRDS('tests/fw/mitigation/1b/ais_2030/p_encounter.RData'),
+                                              outcomes = readRDS('tests/fw/mitigation/1b/ais_2030/outcomes.RData'),
+                                              grid = readRDS('tests/fw/mitigation/1b/ais_2030/outcomes_grid.RData'))),
+                    m2 = list(lng_canada = list(outcomes = readRDS('tests/fw/mitigation/2a/lng_canada/outcomes.RData'),
+                                                grid = readRDS('tests/fw/mitigation/2a/lng_canada/outcomes_grid.RData')),
+                              cedar_lng = list(outcomes = readRDS('tests/fw/mitigation/2a/cedar_lng/outcomes.RData'),
+                                               grid = readRDS('tests/fw/mitigation/2a/cedar_lng/outcomes_grid.RData')),
+                              ais_2030 = list(outcomes = readRDS('tests/fw/mitigation/2b/ais_2030/outcomes.RData'),
+                                              grid = readRDS('tests/fw/mitigation/2b/ais_2030/outcomes_grid.RData'))),
+                    m3 = list(one_month = readRDS('tests/fw/mitigation/3a/mitigation.RData'),
+                              two_months = readRDS('tests/fw/mitigation/3b/mitigation.RData'),
+                              three_months = readRDS('tests/fw/mitigation/3c/mitigation.RData')),
+                    m4 = list(one_month = readRDS('tests/fw/mitigation/4a/mitigation.RData'),
+                              two_months = readRDS('tests/fw/mitigation/4b/mitigation.RData'),
+                              three_months = readRDS('tests/fw/mitigation/4c/mitigation.RData')))
+```
+
+
+*** 
+
+# Humpback whales
+
+The humpback whale analysis is a near-replication of the fin whale analysis, with only a few minor changes. The chief difference is that the humpback whale density surface model produced a different density surface for each month. This means that a seasonal scaling curve was not needed, in contrast to fin whales above. Instead, we have a bootstrapped density surface for each month.
+
+## Close-encounter rates
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Common inputs
+(whales <- humpback_params())
+runs <- 100
+iterations <- 100
+
+# Vessels 2019
+data(ais_2019) ; vessels <- ais_2019
+outcome_dir <- 'tests/hw/ais_2019/'
+encounter_rate(vessels, whales, outcome_dir,
+               month_batches = list(winter = c(0:4, 11:12),
+                                    summer = 5:10),
+               runs  = runs, iterations = iterations, toplot = FALSE)
+
+# Vessels 2015
+data(ais_2015)
+encounter_rate(vessels = ais_2015,
+               whales = whales,
+               outcome_dir = 'tests/hw/ais_2015/',
+               month_batches = list(winter = c(0:4, 11:12),
+                                    summer = 5:10),
+               runs  = 100, iterations = 100, toplot = FALSE)
+
+# LNG Canada
+data(lng_canada) ; vessels <- lng_canada
+outcome_dir <- 'tests/hw/lng_canada/'
+encounter_rate(vessels, whales, outcome_dir,
+               month_batches = list(all = 1:12),
+               runs  = runs, iterations = iterations, toplot = TRUE)
+
+# Cedar LNG
+data(cedar_lng) ; vessels <- cedar_lng
+outcome_dir <- 'tests/hw/cedar_lng/'
+encounter_rate(vessels, whales, outcome_dir,
+               month_batches = list(all = 1:12),
+               runs  = runs, iterations = iterations, toplot = FALSE)
+```
+
+## Ship-strike analysis
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Common datasets to all analyses ==============================================
+
+species <- 'hw'
+whale <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+seasonal <- NULL
+
+data(p_surface)
+surface <- p_surface
+
+asymptote_scaling <- NULL
+
+# 2019 traffic  ================================================================
+
+data(ais_2019) ; traffic <- ais_2019
+(vessels <- unique(traffic$type))
+
+p_encounter_dir <- NULL
+(outcome_dir <- 'tests/hw/ais_2019/') %>% dir
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+
+month_batches <- list(winter = c(0:4, 11:12), summer = 5:10)
+
+outcome_predict(traffic,
+                scale_factors=NULL,
+                 whale,
+                 seasonal,
+                 p_encounter_dir,
+                 surface,
+                 avoidance,
+                 lethality,
+                 outcome_dir,
+                 asymptote_scaling = asymptote_scaling,
+                 month_batches = month_batches,
+                 species=species,
+                 year=2019,
+                 iterations = 1000)
+
+
+# 2015 traffic  ================================================================
+
+data(ais_2015)
+data(p_collision)
+data(p_lethality)
+outcome_predict(traffic = ais_2015,
+                scale_factors=NULL,
+                whale = whale,
+                seasonal = NULL,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/hw/ais_2015/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                species = species,
+                year = 2015,
+                iterations = 1000)
+
+# 2030 traffic =================================================================
+
+data(ais_2019) ; traffic <- ais_2019
+(vessels <- unique(traffic$type))
+(scale_factors <- readRDS('tests/ais/vessel_trends.RData'))
+
+p_encounter_dir <- 'tests/hw/ais_2019/'
+outcome_dir <- 'tests/hw/ais_2030/'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+
+month_batches <- list(winter = c(0:4, 11:12), summer = 5:10)
+
+# Run outcome predictions
+outcome_predict(traffic,
+                scale_factors,
+                 whale,
+                 seasonal,
+                 p_encounter_dir,
+                 surface,
+                 avoidance,
+                 lethality,
+                 outcome_dir,
+                 asymptote_scaling = asymptote_scaling,
+                 month_batches = month_batches,
+                 species=species,
+                 year=2030,
+                 iterations = 1000)
+
+
+# LNG Canada (8 - 14 knots)  ===================================================
+
+data(lng_canada) ; traffic <- lng_canada
+(vessels <- unique(traffic$type))
+
+p_encounter_dir <- NULL
+outcome_dir <- 'tests/hw/lng_canada/'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+avoidance
+
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+lethality
+
+month_batches <- list(all = 0:12)
+
+# Run outcome predictions
+outcome_predict(traffic,
+                scale_factors=NULL,
+                 whale,
+                 seasonal,
+                 p_encounter_dir,
+                 surface,
+                 avoidance,
+                 lethality,
+                 outcome_dir,
+                 asymptote_scaling = asymptote_scaling,
+                 month_batches = month_batches,
+                 species=species,
+                 year=2030,
+                 iterations = 1000)
+
+
+# Cedar LNG (8 - 14 knots)  ====================================================
+
+data(cedar_lng) ; traffic <- cedar_lng
+(vessels <- unique(traffic$type))
+
+p_encounter_dir <- NULL
+outcome_dir <- 'tests/hw/cedar_lng/'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+avoidance
+
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+lethality
+
+month_batches <- list(all = 0:12)
+
+# Run outcome predictions
+outcome_predict(traffic,
+                scale_factors=NULL,
+                whale,
+                seasonal,
+                p_encounter_dir,
+                surface,
+                avoidance,
+                lethality,
+                outcome_dir,
+                asymptote_scaling = asymptote_scaling,
+                month_batches = month_batches,
+                species=species,
+                year=2030,
+                iterations = 1000)
+```
+
+Now compile all of those outcomes into a list:
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+hw <- list(params = humpback_params(),
+           p_encounter = list(ais_2015 = readRDS('tests/hw/ais_2015/p_encounter.RData'),
+                              ais_2019 = readRDS('tests/hw/ais_2019/p_encounter.RData'),
+                              lng_canada = readRDS('tests/hw/lng_canada/p_encounter.RData'),
+                              cedar_lng = readRDS('tests/hw/cedar_lng/p_encounter.RData')),
+           outcomes = list(ais_2015 = readRDS('tests/hw/ais_2015/outcomes.RData'),
+                           ais_2019 = readRDS('tests/hw/ais_2019/outcomes.RData'),
+                           ais_2030 = readRDS('tests/hw/ais_2030/outcomes.RData'),
+                           lng_canada = readRDS('tests/hw/lng_canada/outcomes.RData'),
+                           cedar_lng = readRDS('tests/hw/cedar_lng/outcomes.RData')),
+           grid = list(ais_2015 = readRDS('tests/hw/ais_2015/outcomes_grid.RData'),
+                       ais_2019 = readRDS('tests/hw/ais_2019/outcomes_grid.RData'),
+                       ais_2030 = readRDS('tests/hw/ais_2030/outcomes_grid.RData'),
+                       lng_canada = readRDS('tests/hw/lng_canada/outcomes_grid.RData'),
+                       cedar_lng = readRDS('tests/hw/cedar_lng/outcomes_grid.RData')))
+```
+
+## Mitigation  
+
+The mitigation analysis is a mirror of that used for fin whales above: 
+
+### Speed reductions
+
+#### LNG-only 
+
+First for LNG Canada ... 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Encounter rate
+data(lng_canada)
+encounter_rate(vessels = lng_canada,
+               whales = humpback_params(),
+               outcome_dir = 'tests/hw/mitigation/1a/lng_canada/',
+               month_batches = list(all = 1:12),
+               new_speeds = runif(100, 7, 9),
+               runs  = 100, iterations = 100, toplot = TRUE)
+
+# Outcomes
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(lng_canada)
+(vessels <- unique(lng_canada$type))
+data(p_surface)
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+lng_canada_mod <- lng_canada
+lng_canada_mod$speed <- runif(nrow(lng_canada_mod), 7, 9)
+
+outcome_predict(traffic = lng_canada_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/1a/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+... then for Cedar LNG: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Encounter rate
+data(cedar_lng)
+encounter_rate(vessels = cedar_lng,
+               whales = humpback_params(),
+               outcome_dir = 'tests/hw/mitigation/1a/cedar_lng/',
+               month_batches = list(all = 1:12),
+               new_speeds = runif(100, 7, 9),
+               runs  = 100, iterations = 100, toplot = TRUE)
+
+# Outcomes
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(cedar_lng)
+(vessels <- unique(cedar_lng$type))
+data(p_surface)
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+cedar_lng_mod <- cedar_lng
+cedar_lng_mod$speed <- runif(nrow(cedar_lng_mod), 7, 9)
+
+outcome_predict(traffic = cedar_lng_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/1a/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+#### All large ships
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Encounter rate: AIS 2030
+data(ais_2019)
+encounter_rate(vessels = ais_2019,
+               whales = humpback_params(),
+               outcome_dir = 'tests/hw/mitigation/1b/ais_2030/',
+               month_batches = list(all = 1:12),
+               speed_restriction = 9,
+               lengths_restricted = 180,
+               runs  = 100, iterations = 100, toplot = TRUE)
+
+# Predict outcomes on AIS 2030 with < 9 kn
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(p_surface)
+data(ais_2019)
+scale_factors <- readRDS('tests/ais/vessel_trends.RData')
+data(p_collision)
+data(p_lethality)
+
+ais_2019_mod <- ais_2019
+bads <- which(ais_2019_mod$length > 180 & ais_2019_mod$speed > 9)
+ais_2019_mod$speed[bads] <- 9
+
+outcome_predict(traffic = ais_2019_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/hw/mitigation/1b/ais_2030/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+### Daytime-only transits
+
+#### LNG-only 
+
+First for LNG Canada ... 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(p_surface)
+data(lng_canada)
+(vessels <- unique(lng_canada$type))
+
+lng_canada_mod <- lng_canada # Modify diel here
+lng_canada_mod$diel <- 'day'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+outcome_predict(traffic = lng_canada_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = 'tests/hw/lng_canada/',
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/2a/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+... then for Cedar LNG: 
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(p_surface)
+data(cedar_lng)
+(vessels <- unique(cedar_lng$type))
+
+cedar_lng_mod <- cedar_lng # Modify diel here
+cedar_lng_mod$diel <- 'day'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+outcome_predict(traffic = cedar_lng_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = 'tests/hw/cedar_lng/',
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/2a/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
+```
+
+#### All large ships
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+seasonal_boot <- NULL
+scale_factors <- readRDS('tests/ais/vessel_trends.RData')
+data(p_collision)
+data(p_lethality)
+data(p_surface)
+data(ais_2019)
+
+ais_mod <- ais_2019 # Modify diel here
+bads <- which(ais_mod$length > 180)
+ais_mod$diel[bads] <- 'day'
+
+outcome_predict(traffic = ais_mod,
+                scale_factors=scale_factors,
+                whale = bootstraps,
+                seasonal = seasonal_boot,
+                p_encounter_dir = 'tests/hw/ais_2019/',
+                surface = p_surface,
+                avoidance = p_collision,
+                lethality = p_lethality,
+                outcome_dir = 'tests/hw/mitigation/2b/ais_2030/',
+                asymptote_scaling = NULL,
+                month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
+                iterations = 1000)
+```
+
+### Seasonal displacement of LNG traffic
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# Baseline scenario (no mitigation)   ==========================================
+
+results <- readRDS('tests/hw/results.RData')
+outcomes <- rbind(results$outcomes$lng_canda,
+                  results$outcomes$cedar_lng)
+
+# 3a	One month  ===============================================================
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 1,
+                    reschedule = TRUE)
+saveRDS(mr, file='tests/hw/mitigation/3a/mitigation.RData')
+
+# 3b	Two months  ==============================================================
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 2,
+                    reschedule = TRUE)
+saveRDS(mr, file='tests/hw/mitigation/3b/mitigation.RData')
+
+# 3c	Three months  ============================================================
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 3,
+                    reschedule = TRUE)
+saveRDS(mr, file='tests/hw/mitigation/3c/mitigation.RData')
+```
+
+### Seasonal moratorium on LNG traffic
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+# 4a	One month ================================================================
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 1,
+                    reschedule = FALSE)
+saveRDS(mr, file='tests/hw/mitigation/4a/mitigation.RData')
+
+# 4b	Two months  ==============================================================
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 2,
+                    reschedule = FALSE)
+saveRDS(mr, file='tests/hw/mitigation/4b/mitigation.RData')
+
+# 4c	Three months  ============================================================
+mr <- mitigate_loop(outcomes,
+                    mitigation_duration = 3,
+                    reschedule = FALSE)
+saveRDS(mr, file='tests/hw/mitigation/4c/mitigation.RData')
+```
+
+```{r, echo=TRUE, eval=FALSE, include=TRUE}
+mitigations <- list(m1 = list(lng_canada = list(p_encounter = readRDS('tests/hw/mitigation/1a/lng_canada/p_encounter.RData'),
+                                                outcomes = readRDS('tests/hw/mitigation/1a/lng_canada/outcomes.RData'),
+                                                grid = readRDS('tests/hw/mitigation/1a/lng_canada/outcomes_grid.RData')),
+                              cedar_lng = list(p_encounter = readRDS('tests/hw/mitigation/1a/cedar_lng/p_encounter.RData'),
+                                               outcomes = readRDS('tests/hw/mitigation/1a/cedar_lng/outcomes.RData'),
+                                               grid = readRDS('tests/hw/mitigation/1a/cedar_lng/outcomes_grid.RData')),
+                              ais_2030 = list(p_encounter = readRDS('tests/hw/mitigation/1b/ais_2030/p_encounter.RData'),
+                                              outcomes = readRDS('tests/hw/mitigation/1b/ais_2030/outcomes.RData'),
+                                              grid = readRDS('tests/hw/mitigation/1b/ais_2030/outcomes_grid.RData'))),
+                    m2 = list(lng_canada = list(outcomes = readRDS('tests/hw/mitigation/2a/lng_canada/outcomes.RData'),
+                                                grid = readRDS('tests/hw/mitigation/2a/lng_canada/outcomes_grid.RData')),
+                              cedar_lng = list(outcomes = readRDS('tests/hw/mitigation/2a/cedar_lng/outcomes.RData'),
+                                               grid = readRDS('tests/hw/mitigation/2a/cedar_lng/outcomes_grid.RData')),
+                              ais_2030 = list(outcomes = readRDS('tests/hw/mitigation/2b/ais_2030/outcomes.RData'),
+                                              grid = readRDS('tests/hw/mitigation/2b/ais_2030/outcomes_grid.RData'))),
+                    m3 = list(one_month = readRDS('tests/hw/mitigation/3a/mitigation.RData'),
+                              two_months = readRDS('tests/hw/mitigation/3b/mitigation.RData'),
+                              three_months = readRDS('tests/hw/mitigation/3c/mitigation.RData')),
+                    m4 = list(one_month = readRDS('tests/hw/mitigation/4a/mitigation.RData'),
+                              two_months = readRDS('tests/hw/mitigation/4b/mitigation.RData'),
+                              three_months = readRDS('tests/hw/mitigation/4c/mitigation.RData')))
+```
+
+Refer to the Supplemental Material for *Keen et al. (2023)* for all code that produces the tables and figures within that publication.  
+

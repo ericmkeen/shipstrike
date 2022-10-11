@@ -12,17 +12,19 @@ collision_curve(
 )
 }
 \arguments{
-\item{speeds}{desc}
+\item{speeds}{A vector of speeds at which to predict P(Lethality).}
 
-\item{c1}{desc}
+\item{c1}{First parameter.}
 
-\item{c2}{desc}
+\item{c2}{Second parameter.}
 
-\item{asymptote}{desc}
+\item{asymptote}{Upper asymptote of the function.}
 }
 \value{
-
+A \code{data.frame}.
 }
 \description{
-Produce a P(Collision) ~ Speed curve
+This function returns the Probability of Collision for a range of speeds based on
+a logistic function of form: \code{P(Collision) = asymptote/ (1 + exp(c1*(speeds - c2)))}.
+The defaults are the values used in \emph{Keen et al. (2023)} for large ships > 180m.
 }

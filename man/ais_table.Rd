@@ -2,16 +2,32 @@
 % Please edit documentation in R/ais_table.R
 \name{ais_table}
 \alias{ais_table}
-\title{AIS table}
+\title{Produce a table of summary statistics for AIS traffic.}
 \usage{
 ais_table(ais)
 }
 \arguments{
-\item{ais}{desc}
+\item{ais}{A \code{data.frame} of AIS traffic records for a single year. Each row is a position fix. Required fields:
+\itemize{
+\item \code{vid} = Unique vessel identifier (numeric)
+\item \code{type} = Vessel type (character string)
+\item \code{speed} = Vessel speed, in knots (numeric)
+\item \code{length} = Vessel length, in meters (numeric)
+\item \code{width} = Vessel beam width, in meters (numeric)
+\item \code{draft} = Vessel beam width, in meters (numeric)
+\item \code{datetime} = Datetime in UTC, with format \verb{yyyy-mm-dd hh:mm:ss}
+\item \code{x} = Longitude, decimal degrees (Western degrees negative)
+\item \code{y} = Latitude, decimal degrees (Southern degrees negative)
+}}
 }
 \value{
-
+A \code{data.frame} of summary statistics for each vessel type.
 }
 \description{
-AIS table
+Produce a table of summary statistics for AIS traffic.
+}
+\examples{
+data(ais_2019)
+ais_table(ais_2019)
+
 }

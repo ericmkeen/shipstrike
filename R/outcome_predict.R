@@ -1,20 +1,136 @@
 #' Predict whale-ship interaction outcomes
 #'
-#' @param traffic desc
-#' @param scale_factors desc
-#' @param whale desc
-#' @param seasonal desc
-#' @param p_encounter_dir desc
-#' @param surface desc
-#' @param avoidance desc
-#' @param lethality desc
-#' @param outcome_dir desc
-#' @param asymptote_scaling desc
-#' @param species desc
-#' @param year desc
-#' @param iterations desc
+#' This is the primary function for ship-strike analysis in the `shipstrike` package.
 #'
-#' @return .RData files saved to outcome_dir
+#' @param traffic A `data.frame` of vessel position fixes. Each row ought to be
+#' a position fix within a spatial grid cell for a single transit from a single vessel,
+#' with no more than one row per cell-transit-vessel.  See `data(ais_2019)` for an example.
+#' Required fields:
+#' \itemize{
+#' \item `grid_id` = Grid cell identifier.
+#' \item `vid` = Unique vessel identifier (numeric)
+#' \item `type` = Vessel type (character string)
+#' \item `speed` = Vessel speed, in knots (numeric)
+#' \item `length` = Vessel length, in meters (numeric)
+#' \item `width` = Vessel beam width, in meters (numeric)
+#' \item `draft` = Vessel beam width, in meters (numeric)
+#' \item `datetime` = Datetime in UTC, with format `yyyy-mm-dd hh:mm:ss`
+#' \item `x` = Longitude, decimal degrees (Western degrees negative)
+#' \item `y` = Latitude, decimal degrees (Southern degrees negative)
+#' \item `year` = Year (yyyy)
+#' \item `diel` = Diel period -- either `"day"` or `"night"` (character)
+#' \item `channel` = Waterway or channel (i.e., a geographic subgreion of your study area)
+#' }
+#'
+#' @param scale_factors Optional. A `data.frame` containing scaling factors to use
+#' for each vessel type within `traffic`. The number of transits within a grid cell will be scaled
+#' by this factor, which can be helpful if you are extrapolating a future traffic scenario
+#' based on type-specific trends. This is Keen et al. (2023) used
+#'  2019 traffic data to predict 2030 AIS traffic. The required fields for this `data.frame` are
+#'  `type` and `scale_factor`, where 1.0 means no change in the number of transits.
+#'
+#' @param whale Spatial grid of whale density (i.e., a density surface). This
+#' spatial grid needs to be the same one used to summarize vessel traffic. It requires three fields:
+#' `grid_id` (the grid cell id), 'iteration' (the bootstrap iteration), and `D` (the density estimate).
+#' This `data.frame` may optionally have a field named `month`.
+#' If you have only one density surface for the entire year, you can set `month` to `0`.
+#' If you don't have a density surface available but you want to explore `shipstrike` functionality,
+#' try the `simulate_whale()` function.
+#'
+#' @param seasonal Optional: a seasonal abundance curve used to scale the
+#' density surface in each month. This can be useful if your density surface has the
+#' same distribution in all months, but the overall abundance changes over time,
+#' as with the case of fin whales in Keen et al. (2023).
+#' This `data.frame` requires three fields:
+#' `iteration` (the bootstrap iteration that produced this iteration of the curve,
+#' which offers a means of incorporating uncertainty),
+#' `month`, and `scale_factor` (a number above 0 used to scale the density of each spatial
+#' grid cell; a value of 1 means no change to the grid cell's density).
+#'
+#' @param p_encounter_dir Can be left as `NULL` if the results of `encounter_rate()` are stored in the same
+#' `outcome_dir` specified below.  Otherwise, specify a different path here. See the
+#' `encounter_rate()` function for details on what is expected here.
+#'
+#' @param surface The whale depth distribution,
+#' indicating the proportion of time spent at various depths, including the surface.
+#' An example is provided in the `shipstrike` dataset `data(p_surface)`.
+#' Required fields of this `data.frame` are `diel` (character indicating `"day"` or `"night"`),
+#' `z` (depth, in meters), `p_mean` (the average fraction of time spent at or above this depth),
+#' and `p_sd` (the SD of that fraction).
+#'
+#' @param avoidance Model parameters for the logistic relationship between P(Collision)
+#' and vessel speed: we provide the model parameters used in Keen et al. (2023)
+#' as a `shipstrike` dataset `data(p_collision)`. This `data.frame` needs 4 fields:
+#' `type` (vessel type), `c1` (model parameter 1), `c2` (model parameter 2), and `asymptote`.
+#' See the `shipstrike` function `collision_curve()` for further details.
+#'
+#' @param lethality Model parameters for the logistic relationship between P(Lethality)
+#' and vessel speed: we provide the model parameters used in Keen et al. (2023)
+#' as a `shipstrike` dataset `data(p_lethality)`. This `data.frame` needs 4 fields:
+#' `type` (vessel type), `c1` (model parameter 1), `c2` (model parameter 2), and `asymptote`.
+#' See the `shipstrike` function `lethality_curve()` for further details.
+#'
+#' @param outcome_dir Path specifying the directory into which the simulator result will be saved.
+#' Default is your working directory.
+#'
+#' @param asymptote_scaling An option to scale asymptote of the P(Collision) curve above to
+#' readily/cheaply explore the effects of changing collision~speed relationships on ship-strike
+#' results. A vaue of 1 means no change in the asymptote. If the asymptote is 0.9 and `asymptote_scaling`
+#' is 0.5, the new asymptote would be 0.45.
+#'
+#' @param species A character specifying the species (or any other label you wish to apply) to
+#' which this analysis pertains. Will be added to results in order to stave off confusion with other
+#' results from other runs.
+#'
+#' @param year The year pertaining to this analysis. Will be added to the results objects.
+#'
+#' @param iterations The number of iterations to use to produce the posterior distributions of each outcome estimate.
+#' Default is 1,000.
+#'
+#' @return The outcome of this function is two large `data.frames` of results saved as
+#' `outcomes.RData` (spatially summarized results for each iteration) and
+#' `outcomes_grid.RData` (spatially explicit grid of outcomes summed across iterations)
+#' inside `outcome_dir`.
+#'
+#' The `outcomes.Rdata` table contains a row for each iteration, with the following fields:
+#' \itemize{
+#' \item `species` = The same `species` provided as an input.
+#' \item `year` = The same `year` provided as an input.
+#' \item `channel` = Waterway for which outcomes are being summed across the spatial grid therein.
+#' \item `vessel` = Vessel type for which outcomes are being summed.
+#' \item `month` = Month in which outcomes are being summed.
+#' \item `diel` = Diel period in which outcomes are being summed.
+#' \item `iteration` = Iteration for which otucomes are being summed.
+#' \item `cooccurrence` = Number of cooccurrences predicted for this iteraiton of the channel-vessel-month-diel scenario.
+#' \item `encounter` = Number of close-encounter events predicted (see `encounter_rate()`)
+#' \item `surface` = Number of strike zone events predicted, in which the strike zone is 1x vessel draft.
+#' \item `surface2` = Strike zone is 1.5x vessel draft.
+#' \item `collision1.1` = Collisions predicted, where strike zone is 1x draft and P(Collision) is a constant 0.55.
+#' \item `collision1.2` = P(Collision) is a function of vessel speed according to `avoidance` input.
+#' \item `collision1.3` = Deprecated (will return same as `collision1.2`)
+#' \item `collision1.4` = P(Collision) is 1.0 (i.e., no avoidance.)
+#' \item `collision2.1` = Same as above, but strike zone is 1.5x vessel draft.
+#' \item `collision2.2`
+#' \item `collision2.3`
+#' \item `collision2.4`
+#' \item `mortality1.1` = Mortalities predicted (strike zone and P(Collision) numbers follow pattern above.)
+#' \item `mortality1.2`
+#' \item `mortality1.3`
+#' \item `mortality1.4`
+#' \item `mortality2.1`
+#' \item `mortality2.2`
+#' \item `mortality2.3`
+#' \item `mortality2.4`
+#' }
+#'
+#' Pass these results on to other `outcome_` functions in `shipstrike`, such as `outcome_table()` and
+#' `outcome_histograms()`. See the vignette for further details.
+#'
+#' The `outcomes_grid.RData` table contains a row for grid cell,
+#' summed across all iterations, with the same fields as above except with `grid_cell`
+#' instead of `iteration`. Pass this result grid on to `outcome_map()`.
+#'
+#'
 #' @export
 #'
 outcome_predict <- function(traffic,
@@ -25,7 +141,7 @@ outcome_predict <- function(traffic,
                              surface,
                              avoidance,
                              lethality,
-                             outcome_dir,
+                             outcome_dir = '',
                              asymptote_scaling = NULL,
                              month_batches = list(winter = c(0:4, 11:12),
                                                   summer = 5:10),

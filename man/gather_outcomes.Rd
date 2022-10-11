@@ -7,13 +7,13 @@
 gather_outcomes(outcome_dir, verbose = TRUE)
 }
 \arguments{
-\item{outcome_dir}{desc}
+\item{outcome_dir}{Path (relative or absolute) to directory containing outcome files.}
 
-\item{verbose}{desc}
+\item{verbose}{Boolean; print updates to Console?}
 }
 \value{
-
+A \code{data.frame}
 }
 \description{
-Gather and concatentate outcome \code{RData} files
+This is not typically called by the user and currently deprecated.
 }

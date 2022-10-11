@@ -1,14 +1,16 @@
 #' Draw an ellipse
 #'
-#' @param x desc
-#' @param y desc
-#' @param width desc
-#' @param height desc
-#' @param theta desc
-#' @param npoints desc
-#' @param plot desc
+#' @param x Center x coordinate of ellipse.
+#' @param y Center y coordinate of ellipse.
+#' @param width Width of ellipse.
+#' @param height Length of ellipse.
+#' @param theta Angle/heading.
+#' @param npoints Number of vertices to use to define the ellipse boundary.
+#' @param plot Boolean; print a diagnostic plot?
 #'
-#' @return desc
+#' @return A list with three slots: `coords` (a `data.frame` of coordinates
+#' defining ellipse boundary), `center` (the `x` and `y` inputs), and `theta` (the input angle).
+#'
 #' @export
 #' @import plotrix
 #'

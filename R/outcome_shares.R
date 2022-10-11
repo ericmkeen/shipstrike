@@ -1,8 +1,13 @@
 #' Share of risk by vessel type, channel, month, and diel period
 #'
-#' @param outcomes desc
+#' This function uses a bootstrapping routine (described in Keen et al. 2023)
+#' to estimate the share of risk attributable to each level for vessel type,
+#' channel, month, and diel period. It does this for each outcome type
+#' (cooccurrence, close encounter, …, mortality).
 #'
-#' @return desc
+#' @param outcomes A `data.frame` of results from the `shipstrike::gather_outcomes()` function.
+#'
+#' @return A named `list`.
 #' @export
 #' @import dplyr
 #' @import data.table

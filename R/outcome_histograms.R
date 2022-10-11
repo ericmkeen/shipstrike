@@ -1,12 +1,16 @@
 #' Create histograms summarizing whale-ship outcomes
 #'
+#' This function produces pretty histograms of the posterior distributions of
+#' outcome predictions (the default is to only show the outcomes for scenarios
+#' in which strike zone is 1.5x draft and avoidance is a function of vessel speed).
+
 #' @param outcomes A `data.frame` of results from the `shipstrike::gather_outcomes()` function.
-#' @param surface_var desc
-#' @param collision_var desc
-#' @param mortality_var desc
-#' @param orientation desc
+#' @param surface_var The 'strike zone event' variable to use (`"surface1"` or `"surface2"`)
+#' @param collision_var The `collision` variable to use. See output of `outcome_predict()`.
+#' @param mortality_var The `mortality` variable to use.  See output of `outcome_predict()`.
+#' @param orientation Character; `"vertical"` or `"horizontal"`.
 #'
-#' @return desc
+#' @return A `ggplot2` object.
 #' @export
 #' @import ggplot2
 #' @import dplyr

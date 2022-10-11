@@ -15,6 +15,10 @@
 #'
 #' @export
 #'
+#' @examples
+#' data(ais_2019)
+#' vessel_sun_angle(ais_2019)
+#'
 vessel_sun_angle <- function(vessels, verbose=FALSE){
 
   if(FALSE){

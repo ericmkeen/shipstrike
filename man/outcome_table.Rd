@@ -10,8 +10,9 @@ outcome_table(outcomes)
 \item{outcomes}{A \code{data.frame} of results from the \code{shipstrike::gather_outcomes()} function.}
 }
 \value{
-
+A \code{data.frame}. See the output of \code{outcome_predict()}.
 }
 \description{
-Tabular summary of ship strike outcomes
+This function summarizes the predictions for each stage
+of whale-vessel interaction, from cooccurrence to mortality.
 }

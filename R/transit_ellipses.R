@@ -1,8 +1,10 @@
 #' Produce ellipses and test for close encounters
 #'
-#' @param transits desc
+#' This is an internal `shipstrike` function not called directly by users.
 #'
-#' @return desc
+#' @param transits A list of transit details produced during the `encounter_rate()` code.
+#'
+#' @return A `list`.
 #' @export
 #' @import dplyr
 #'

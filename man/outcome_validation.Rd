@@ -16,23 +16,25 @@ outcome_validation(
 )
 }
 \arguments{
-\item{outcomes}{desc}
+\item{outcomes}{A \code{data.frame} of results from the \code{shipstrike::gather_outcomes()} function.}
 
-\item{observations}{desc}
+\item{observations}{The number of observed strike events during observation period.}
 
-\item{scaling_factor}{desc}
+\item{scaling_factor}{Deprecated -- keep at 1.}
 
-\item{years}{desc}
+\item{years}{Years of observation.}
 
-\item{months}{desc}
+\item{months}{Months of effort during each year.}
 
-\item{iterations}{desc}
+\item{iterations}{Number of iterations to use for randomization routine.}
 
-\item{toplot}{desc}
+\item{toplot}{Produce plots?}
 }
 \value{
-
+A named \code{list} including \code{ggplot2} objects, as well as output printed to console.
 }
 \description{
-Outcome validation simulation
+This function replicates the validation exercise from Keen et al. (2023)
+to determine what our strike detection rate would need to be in order for
+our results to be plausible given that we have never observed a strike in our study area.
 }

@@ -13,7 +13,7 @@ outcome_predict(
   surface,
   avoidance,
   lethality,
-  outcome_dir,
+  outcome_dir = "",
   asymptote_scaling = NULL,
   month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
   species = "fw",
@@ -22,35 +22,135 @@ outcome_predict(
 )
 }
 \arguments{
-\item{traffic}{desc}
+\item{traffic}{A \code{data.frame} of vessel position fixes. Each row ought to be
+a position fix within a spatial grid cell for a single transit from a single vessel,
+with no more than one row per cell-transit-vessel.  See \code{data(ais_2019)} for an example.
+Required fields:
+\itemize{
+\item \code{grid_id} = Grid cell identifier.
+\item \code{vid} = Unique vessel identifier (numeric)
+\item \code{type} = Vessel type (character string)
+\item \code{speed} = Vessel speed, in knots (numeric)
+\item \code{length} = Vessel length, in meters (numeric)
+\item \code{width} = Vessel beam width, in meters (numeric)
+\item \code{draft} = Vessel beam width, in meters (numeric)
+\item \code{datetime} = Datetime in UTC, with format \verb{yyyy-mm-dd hh:mm:ss}
+\item \code{x} = Longitude, decimal degrees (Western degrees negative)
+\item \code{y} = Latitude, decimal degrees (Southern degrees negative)
+\item \code{year} = Year (yyyy)
+\item \code{diel} = Diel period -- either \code{"day"} or \code{"night"} (character)
+\item \code{channel} = Waterway or channel (i.e., a geographic subgreion of your study area)
+}}
 
-\item{scale_factors}{desc}
+\item{scale_factors}{Optional. A \code{data.frame} containing scaling factors to use
+for each vessel type within \code{traffic}. The number of transits within a grid cell will be scaled
+by this factor, which can be helpful if you are extrapolating a future traffic scenario
+based on type-specific trends. This is Keen et al. (2023) used
+2019 traffic data to predict 2030 AIS traffic. The required fields for this \code{data.frame} are
+\code{type} and \code{scale_factor}, where 1.0 means no change in the number of transits.}
 
-\item{whale}{desc}
+\item{whale}{Spatial grid of whale density (i.e., a density surface). This
+spatial grid needs to be the same one used to summarize vessel traffic. It requires three fields:
+\code{grid_id} (the grid cell id), 'iteration' (the bootstrap iteration), and \code{D} (the density estimate).
+This \code{data.frame} may optionally have a field named \code{month}.
+If you have only one density surface for the entire year, you can set \code{month} to \code{0}.
+If you don't have a density surface available but you want to explore \code{shipstrike} functionality,
+try the \code{simulate_whale()} function.}
 
-\item{seasonal}{desc}
+\item{seasonal}{Optional: a seasonal abundance curve used to scale the
+density surface in each month. This can be useful if your density surface has the
+same distribution in all months, but the overall abundance changes over time,
+as with the case of fin whales in Keen et al. (2023).
+This \code{data.frame} requires three fields:
+\code{iteration} (the bootstrap iteration that produced this iteration of the curve,
+which offers a means of incorporating uncertainty),
+\code{month}, and \code{scale_factor} (a number above 0 used to scale the density of each spatial
+grid cell; a value of 1 means no change to the grid cell's density).}
 
-\item{p_encounter_dir}{desc}
+\item{p_encounter_dir}{Can be left as \code{NULL} if the results of \code{encounter_rate()} are stored in the same
+\code{outcome_dir} specified below.  Otherwise, specify a different path here. See the
+\code{encounter_rate()} function for details on what is expected here.}
 
-\item{surface}{desc}
+\item{surface}{The whale depth distribution,
+indicating the proportion of time spent at various depths, including the surface.
+An example is provided in the \code{shipstrike} dataset \code{data(p_surface)}.
+Required fields of this \code{data.frame} are \code{diel} (character indicating \code{"day"} or \code{"night"}),
+\code{z} (depth, in meters), \code{p_mean} (the average fraction of time spent at or above this depth),
+and \code{p_sd} (the SD of that fraction).}
 
-\item{avoidance}{desc}
+\item{avoidance}{Model parameters for the logistic relationship between P(Collision)
+and vessel speed: we provide the model parameters used in Keen et al. (2023)
+as a \code{shipstrike} dataset \code{data(p_collision)}. This \code{data.frame} needs 4 fields:
+\code{type} (vessel type), \code{c1} (model parameter 1), \code{c2} (model parameter 2), and \code{asymptote}.
+See the \code{shipstrike} function \code{collision_curve()} for further details.}
 
-\item{lethality}{desc}
+\item{lethality}{Model parameters for the logistic relationship between P(Lethality)
+and vessel speed: we provide the model parameters used in Keen et al. (2023)
+as a \code{shipstrike} dataset \code{data(p_lethality)}. This \code{data.frame} needs 4 fields:
+\code{type} (vessel type), \code{c1} (model parameter 1), \code{c2} (model parameter 2), and \code{asymptote}.
+See the \code{shipstrike} function \code{lethality_curve()} for further details.}
 
-\item{outcome_dir}{desc}
+\item{outcome_dir}{Path specifying the directory into which the simulator result will be saved.
+Default is your working directory.}
 
-\item{asymptote_scaling}{desc}
+\item{asymptote_scaling}{An option to scale asymptote of the P(Collision) curve above to
+readily/cheaply explore the effects of changing collision~speed relationships on ship-strike
+results. A vaue of 1 means no change in the asymptote. If the asymptote is 0.9 and \code{asymptote_scaling}
+is 0.5, the new asymptote would be 0.45.}
 
-\item{species}{desc}
+\item{species}{A character specifying the species (or any other label you wish to apply) to
+which this analysis pertains. Will be added to results in order to stave off confusion with other
+results from other runs.}
 
-\item{year}{desc}
+\item{year}{The year pertaining to this analysis. Will be added to the results objects.}
 
-\item{iterations}{desc}
+\item{iterations}{The number of iterations to use to produce the posterior distributions of each outcome estimate.
+Default is 1,000.}
 }
 \value{
-.RData files saved to outcome_dir
+The outcome of this function is two large \code{data.frames} of results saved as
+\code{outcomes.RData} (spatially summarized results for each iteration) and
+\code{outcomes_grid.RData} (spatially explicit grid of outcomes summed across iterations)
+inside \code{outcome_dir}.
+
+The \code{outcomes.Rdata} table contains a row for each iteration, with the following fields:
+\itemize{
+\item \code{species} = The same \code{species} provided as an input.
+\item \code{year} = The same \code{year} provided as an input.
+\item \code{channel} = Waterway for which outcomes are being summed across the spatial grid therein.
+\item \code{vessel} = Vessel type for which outcomes are being summed.
+\item \code{month} = Month in which outcomes are being summed.
+\item \code{diel} = Diel period in which outcomes are being summed.
+\item \code{iteration} = Iteration for which otucomes are being summed.
+\item \code{cooccurrence} = Number of cooccurrences predicted for this iteraiton of the channel-vessel-month-diel scenario.
+\item \code{encounter} = Number of close-encounter events predicted (see \code{encounter_rate()})
+\item \code{surface} = Number of strike zone events predicted, in which the strike zone is 1x vessel draft.
+\item \code{surface2} = Strike zone is 1.5x vessel draft.
+\item \code{collision1.1} = Collisions predicted, where strike zone is 1x draft and P(Collision) is a constant 0.55.
+\item \code{collision1.2} = P(Collision) is a function of vessel speed according to \code{avoidance} input.
+\item \code{collision1.3} = Deprecated (will return same as \code{collision1.2})
+\item \code{collision1.4} = P(Collision) is 1.0 (i.e., no avoidance.)
+\item \code{collision2.1} = Same as above, but strike zone is 1.5x vessel draft.
+\item \code{collision2.2}
+\item \code{collision2.3}
+\item \code{collision2.4}
+\item \code{mortality1.1} = Mortalities predicted (strike zone and P(Collision) numbers follow pattern above.)
+\item \code{mortality1.2}
+\item \code{mortality1.3}
+\item \code{mortality1.4}
+\item \code{mortality2.1}
+\item \code{mortality2.2}
+\item \code{mortality2.3}
+\item \code{mortality2.4}
+}
+
+Pass these results on to other \code{outcome_} functions in \code{shipstrike}, such as \code{outcome_table()} and
+\code{outcome_histograms()}. See the vignette for further details.
+
+The \code{outcomes_grid.RData} table contains a row for grid cell,
+summed across all iterations, with the same fields as above except with \code{grid_cell}
+instead of \code{iteration}. Pass this result grid on to \code{outcome_map()}.
 }
 \description{
-Predict whale-ship interaction outcomes
+This is the primary function for ship-strike analysis in the \code{shipstrike} package.
 }

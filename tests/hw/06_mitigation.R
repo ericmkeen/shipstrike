@@ -21,98 +21,98 @@ document()
 # LNG Canada ===================================================================
 
 # Encounter rate
-# data(lng_canada)
-# encounter_rate(vessels = lng_canada,
-#                whales = humpback_params(),
-#                outcome_dir = 'tests/hw/mitigation/1a/lng_canada/',
-#                month_batches = list(all = 1:12),
-#                new_speeds = runif(100, 7, 9),
-#                runs  = 100, iterations = 100, toplot = TRUE)
+data(lng_canada)
+encounter_rate(vessels = lng_canada,
+               whales = humpback_params(),
+               outcome_dir = 'tests/hw/mitigation/1a/lng_canada/',
+               month_batches = list(all = 1:12),
+               new_speeds = runif(100, 7, 9),
+               runs  = 100, iterations = 100, toplot = TRUE)
 
 # Outcomes
-# bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
-# data(lng_canada)
-# (vessels <- unique(lng_canada$type))
-# data(p_surface)
-#
-# data(p_collision) ; (avoidance <- p_collision)
-# data(p_lethality) ; (lethality <- p_lethality)
-# (avoidance <- avoidance[c(2,4),])
-# (avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-# (lethality <- lethality[c(2,4),])
-# (lethality$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-#
-# lng_canada_mod <- lng_canada
-# lng_canada_mod$speed <- runif(nrow(lng_canada_mod), 7, 9)
-#
-# outcome_predict(traffic = lng_canada_mod,
-#                 scale_factors=NULL,
-#                 whale = bootstraps,
-#                 seasonal = NULL,
-#                 p_encounter_dir = NULL,
-#                 surface = p_surface,
-#                 avoidance = avoidance,
-#                 lethality = lethality,
-#                 outcome_dir = 'tests/hw/mitigation/1a/lng_canada/',
-#                 asymptote_scaling = NULL,
-#                 month_batches = list(all = 0:12),
-#                 iterations = 1000)
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(lng_canada)
+(vessels <- unique(lng_canada$type))
+data(p_surface)
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+lng_canada_mod <- lng_canada
+lng_canada_mod$speed <- runif(nrow(lng_canada_mod), 7, 9)
+
+outcome_predict(traffic = lng_canada_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/1a/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
 
 # Cedar LNG ====================================================================
 
 # Encounter rate
-# data(cedar_lng)
-# encounter_rate(vessels = cedar_lng,
-#                whales = humpback_params(),
-#                outcome_dir = 'tests/hw/mitigation/1a/cedar_lng/',
-#                month_batches = list(all = 1:12),
-#                new_speeds = runif(100, 7, 9),
-#                runs  = 100, iterations = 100, toplot = TRUE)
+data(cedar_lng)
+encounter_rate(vessels = cedar_lng,
+               whales = humpback_params(),
+               outcome_dir = 'tests/hw/mitigation/1a/cedar_lng/',
+               month_batches = list(all = 1:12),
+               new_speeds = runif(100, 7, 9),
+               runs  = 100, iterations = 100, toplot = TRUE)
 
 # Outcomes
-# bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
-# data(cedar_lng)
-# (vessels <- unique(cedar_lng$type))
-# data(p_surface)
-# data(p_collision) ; (avoidance <- p_collision)
-# data(p_lethality) ; (lethality <- p_lethality)
-# (avoidance <- avoidance[c(2,4),])
-# (avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-# (lethality <- lethality[c(2,4),])
-# (lethality$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-#
-# cedar_lng_mod <- cedar_lng
-# cedar_lng_mod$speed <- runif(nrow(cedar_lng_mod), 7, 9)
-#
-# outcome_predict(traffic = cedar_lng_mod,
-#                 scale_factors=NULL,
-#                 whale = bootstraps,
-#                 seasonal = NULL,
-#                 p_encounter_dir = NULL,
-#                 surface = p_surface,
-#                 avoidance = avoidance,
-#                 lethality = lethality,
-#                 outcome_dir = 'tests/hw/mitigation/1a/cedar_lng/',
-#                 asymptote_scaling = NULL,
-#                 month_batches = list(all = 0:12),
-#                 iterations = 1000)
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(cedar_lng)
+(vessels <- unique(cedar_lng$type))
+data(p_surface)
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+cedar_lng_mod <- cedar_lng
+cedar_lng_mod$speed <- runif(nrow(cedar_lng_mod), 7, 9)
+
+outcome_predict(traffic = cedar_lng_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = NULL,
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/1a/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
 
 ################################################################################
 # 1b	Speed reduction for all traffic > 100m (7 – 9 kn for LNG, < 10 kn for all other)
 
 # Encounter rate: AIS 2030
-# data(ais_2019)
-# encounter_rate(vessels = ais_2019,
-#                whales = humpback_params(),
-#                outcome_dir = 'tests/hw/mitigation/1b/ais_2030/',
-#                month_batches = list(all = 1:12),
-#                speed_restriction = 9,
-#                lengths_restricted = 180,
-#                runs  = 100, iterations = 100, toplot = TRUE)
+data(ais_2019)
+encounter_rate(vessels = ais_2019,
+               whales = humpback_params(),
+               outcome_dir = 'tests/hw/mitigation/1b/ais_2030/',
+               month_batches = list(all = 1:12),
+               speed_restriction = 9,
+               lengths_restricted = 180,
+               runs  = 100, iterations = 100, toplot = TRUE)
 
 # Predict outcomes on AIS 2030 with < 9 kn
 bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
@@ -154,67 +154,67 @@ outcome_predict(traffic = ais_2019_mod,
 
 # LNG Canada ===================================================================
 
-# bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
-# data(p_surface)
-# data(lng_canada)
-# (vessels <- unique(lng_canada$type))
-#
-# lng_canada_mod <- lng_canada # Modify diel here
-# lng_canada_mod$diel <- 'day'
-#
-# data(p_collision) ; (avoidance <- p_collision)
-# data(p_lethality) ; (lethality <- p_lethality)
-# (avoidance <- avoidance[c(2,4),])
-# (avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-# (lethality <- lethality[c(2,4),])
-# (lethality$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-#
-# outcome_predict(traffic = lng_canada_mod,
-#                 scale_factors=NULL,
-#                 whale = bootstraps,
-#                 seasonal = NULL,
-#                 p_encounter_dir = 'tests/hw/lng_canada/',
-#                 surface = p_surface,
-#                 avoidance = avoidance,
-#                 lethality = lethality,
-#                 outcome_dir = 'tests/hw/mitigation/2a/lng_canada/',
-#                 asymptote_scaling = NULL,
-#                 month_batches = list(all = 0:12),
-#                 iterations = 1000)
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(p_surface)
+data(lng_canada)
+(vessels <- unique(lng_canada$type))
+
+lng_canada_mod <- lng_canada # Modify diel here
+lng_canada_mod$diel <- 'day'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+outcome_predict(traffic = lng_canada_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = 'tests/hw/lng_canada/',
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/2a/lng_canada/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
 
 # Cedar LNG ====================================================================
 
-# bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
-# data(p_surface)
-# data(cedar_lng)
-# (vessels <- unique(cedar_lng$type))
-#
-# cedar_lng_mod <- cedar_lng # Modify diel here
-# cedar_lng_mod$diel <- 'day'
-#
-# data(p_collision) ; (avoidance <- p_collision)
-# data(p_lethality) ; (lethality <- p_lethality)
-# (avoidance <- avoidance[c(2,4),])
-# (avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-# (lethality <- lethality[c(2,4),])
-# (lethality$type <- c(paste(vessels[3:4], collapse=' | '),
-#                      paste(vessels[1:2], collapse=' | ')))
-#
-# outcome_predict(traffic = cedar_lng_mod,
-#                 scale_factors=NULL,
-#                 whale = bootstraps,
-#                 seasonal = NULL,
-#                 p_encounter_dir = 'tests/hw/cedar_lng/',
-#                 surface = p_surface,
-#                 avoidance = avoidance,
-#                 lethality = lethality,
-#                 outcome_dir = 'tests/hw/mitigation/2a/cedar_lng/',
-#                 asymptote_scaling = NULL,
-#                 month_batches = list(all = 0:12),
-#                 iterations = 1000)
+bootstraps <- readRDS('tests/hw/pwhale_seasonal_boots.RData')
+data(p_surface)
+data(cedar_lng)
+(vessels <- unique(cedar_lng$type))
+
+cedar_lng_mod <- cedar_lng # Modify diel here
+cedar_lng_mod$diel <- 'day'
+
+data(p_collision) ; (avoidance <- p_collision)
+data(p_lethality) ; (lethality <- p_lethality)
+(avoidance <- avoidance[c(2,4),])
+(avoidance$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+(lethality <- lethality[c(2,4),])
+(lethality$type <- c(paste(vessels[3:4], collapse=' | '),
+                     paste(vessels[1:2], collapse=' | ')))
+
+outcome_predict(traffic = cedar_lng_mod,
+                scale_factors=NULL,
+                whale = bootstraps,
+                seasonal = NULL,
+                p_encounter_dir = 'tests/hw/cedar_lng/',
+                surface = p_surface,
+                avoidance = avoidance,
+                lethality = lethality,
+                outcome_dir = 'tests/hw/mitigation/2a/cedar_lng/',
+                asymptote_scaling = NULL,
+                month_batches = list(all = 0:12),
+                iterations = 1000)
 
 ################################################################################
 # 2b	All traffic > 180m)

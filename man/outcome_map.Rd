@@ -20,33 +20,35 @@ outcome_map(
 )
 }
 \arguments{
-\item{outcomes_grid}{desc}
+\item{outcomes_grid}{The \code{outcomes_grid} output from \code{outcome_predict()}.}
 
-\item{base_map}{desc}
+\item{base_map}{Base map, provided as a \code{ggplot2} object. The default is to
+use \code{bangarang::gg_kfs()} of the Kitimat Fjord System (BC, Canada).}
 
-\item{varplot}{desc}
+\item{varplot}{The variable to plot. See output of \code{outcome_predict()}.}
 
-\item{varfacet}{desc}
+\item{varfacet}{The variable by which to facet, if any.}
 
-\item{spp}{desc}
+\item{spp}{Species to filter by.}
 
-\item{years}{desc}
+\item{years}{Year to filter by.}
 
-\item{channels}{desc}
+\item{channels}{\code{channel} to filter by.}
 
-\item{vessels}{desc}
+\item{vessels}{\code{vessels} to filter by.}
 
-\item{months}{desc}
+\item{months}{\code{months} (numerics) to filter by.}
 
-\item{diels}{desc}
+\item{diels}{Diel period \code{"night"} or \code{"day"}).}
 
-\item{col_min}{desc}
+\item{col_min}{Specify minimum color of color gradient scale.}
 
-\item{col_max}{desc}
+\item{col_max}{Specify maximum color of color gradient scale.}
 }
 \value{
-
+A \code{ggplot} object.
 }
 \description{
-Plot map of outcomes
+This function produces a map of a risk metric.
+The default is to show cooccurrences for all month-diel-vessels.
 }

@@ -1,6 +1,6 @@
 #' Apply mitigation filters to a list of outcomes
 #'
-#' @param outcomes desc
+#' @param outcomes The result of `outcome_predict()`.
 #' @param mitigation_filters desc
 #'
 #' @return desc

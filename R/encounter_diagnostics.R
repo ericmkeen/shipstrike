@@ -1,10 +1,16 @@
 #' Plot diagnostics for a single encounter-rate transit
 #'
-#' @param transits desc
-#' @param id desc
-#' @param wait desc
+#' @param transits The result of `encounter_rate()` in which `runs` is set to `1`.
+#' @param id The iteration ID for which you want a detailed diagnostic plot. Can be
+#' left `NULL`, which will begin at the first iteration then step through every iteration
+#' in the `transits` object until you press Escape.
 #'
-#' @return desc
+#' @param wait Boolean, with default `TRUE`, indicating if you want `R` to wait for you
+#' to press `Enter` between each iteration, or just move automatically through the entire
+#' `transits` object.
+#'
+#' @return A series of diagnostic plots depicting the details of a close-encounter simulation iteration.
+#'
 #' @export
 #' @import dplyr
 #' @import ggplot2

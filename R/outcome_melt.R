@@ -1,9 +1,13 @@
-#' Outcome melt
+#' Melt the result of `predict_outcomes()` to use with `tidyverse` verbs.
 #'
-#' @param mr desc
-#' @param events desc
+#' This function may be handy if you want to conduct your own tailored analyses.
+#' It melts the results data into a tidyverse-friendly format in which every row
+#' is a single prediction. Every function above calls this function internally.
 #'
-#' @return desc
+#' @param mr A `data.frame` of results from the `shipstrike::gather_outcomes()` function.
+#' @param events A character vector of outcome types to retain in the melted dataset.
+#'
+#' @return A melted `data.frame`
 #' @export
 #' @import dplyr
 #'

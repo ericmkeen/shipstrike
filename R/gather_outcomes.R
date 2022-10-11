@@ -1,9 +1,12 @@
 #' Gather and concatentate outcome `RData` files
 #'
-#' @param outcome_dir desc
-#' @param verbose desc
+#' This is not typically called by the user and currently deprecated.
 #'
-#' @return
+#' @param outcome_dir Path (relative or absolute) to directory containing outcome files.
+#'
+#' @param verbose Boolean; print updates to Console?
+#'
+#' @return A `data.frame`
 #' @export
 #'
 gather_outcomes <- function(outcome_dir, verbose=TRUE){

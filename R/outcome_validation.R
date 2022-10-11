@@ -1,14 +1,19 @@
 #' Outcome validation simulation
 #'
-#' @param outcomes desc
-#' @param observations desc
-#' @param scaling_factor desc
-#' @param years desc
-#' @param months desc
-#' @param iterations desc
-#' @param toplot desc
+#' This function replicates the validation exercise from Keen et al. (2023)
+#' to determine what our strike detection rate would need to be in order for
+#' our results to be plausible given that we have never observed a strike in our study area.
 #'
-#' @return
+#'
+#' @param outcomes A `data.frame` of results from the `shipstrike::gather_outcomes()` function.
+#' @param observations The number of observed strike events during observation period.
+#' @param scaling_factor Deprecated -- keep at 1.
+#' @param years Years of observation.
+#' @param months Months of effort during each year.
+#' @param iterations Number of iterations to use for randomization routine.
+#' @param toplot Produce plots?
+#'
+#' @return A named `list` including `ggplot2` objects, as well as output printed to console.
 #' @export
 #' @import dplyr
 #' @import ggplot2

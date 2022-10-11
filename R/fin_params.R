@@ -1,29 +1,41 @@
-#' Fin whale parameters
+#' Fin whale parameters to use in ship-strike analysis
 #'
-#' @param length_min Whale dimensions will be drawn from
-#' a truncated normal distribution (source: Keen et al 2021)
-#' @param length_max desc
-#' @param length_mean desc
-#' @param length_sd desc
-#' @param width_factor will be used to scale length to find width
-#' @param speed_day_min Whale speed will be drawn from
-#' a truncated normal distribution (source: Hendricks et al 2021)
-#' @param speed_day_max desc
-#' @param speed_day_mean desc
-#' @param speed_day_sd desc
-#' @param speed_night_min desc
-#' @param speed_night_max desc
-#' @param speed_night_mean desc
-#' @param speed_night_sd desc
-#' @param delta_day_mean Whale track variability defined as the
-#' standard deviation of changes in whale course every 60 seconds;
-#' values will be drawn from a normal distribution then reverse-log-transformed
-#' (source: Hendricks et al. 2021)
-#' @param delta_day_sd desc
-#' @param delta_night_mean desc
-#' @param delta_night_sd desc
+#' A list of parameters used for fin whales in the analyses within *Keen et al. (2023)*.
+#' These parameters include all the details needed to estimate close-encounter rates and
+#' predictions of whale-vessel interaction rates and collisions. You can use these same values
+#' to get started in setting up your analysis,
+#' then use this function to modify the values to fit your specific study.
 #'
-#' @return
+#' The sources and rationale for these values are explaiend in *Keen et al. (2023)*.
+#'
+#' @param length_min Minimum whale length (meters) used to define a truncated normal distribution.
+#' @param length_max Maximum whale length (meters) used to define a truncated normal distribution.
+#' @param length_mean Mean whale length (meters).
+#' @param length_sd Standard deviation in whale length (meters).
+#' @param width_factor The scaling factor used to estimate whale fluke width based on length.
+#' For exampl, a `width_factor` of 0.1 means a 20m whale has a fluke width of 2 meters.
+#' @param speed_day_min Minimum daytime whale speed (meters/second)
+#' used to define a truncated normal distribution.
+#' @param speed_day_max Maximum daytime whale speed (meters/second)
+#' used to define a truncated normal distribution.
+#' @param speed_day_mean Mean daytime whale speed (meters/second)
+#' @param speed_day_sd Standard deviation of daytime whale speed (meters/second)
+#' @param speed_night_min Minimum nighttime whale speed (meters/second)
+#' used to define a truncated normal distribution.
+#' @param speed_night_max Maximum nighttime whale speed (meters/second)
+#' used to define a truncated normal distribution.
+#' @param speed_night_mean Mean nighttime whale speed (meters/second)
+#' @param speed_night_sd Standard deviation of nighttime whale speed (meters/second)
+#' @param delta_day_mean Mean of daytime whale track variability, defined as the
+#' standard deviation of changes in whale course (log-transformed) every 60 seconds;
+#' values will be drawn from a normal distribution with mean 0, then reverse-log-transformed.
+#' @param delta_day_sd Standard deviation of track variability.
+#' @param delta_night_mean Mean of nighttime whale track variability.
+#' @param delta_night_sd Standard deviation of nighttime whale track variability.
+#'
+#' @return A named list of these inputs, without any changes at all. Pass this list to
+#' `shipstrike::encounter_rate()` or `shipstrike::outcome_predict()`.
+#'
 #' @export
 #'
 fin_params <- function(length_min = 10,

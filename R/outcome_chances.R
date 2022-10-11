@@ -1,10 +1,12 @@
 #' Chances of at least / no more than X interactions
 #'
-#' @param outcomes desc
+#' This function predicts the chances of certain outcome severities.
+#'
+#' @param outcomes A `data.frame` of results from the `shipstrike::gather_outcomes()` function.
 #' @param collision_var desc
 #' @param mortality_Var desc
 #'
-#' @return desc
+#' @return A named `list`.
 #' @export
 #' @import dplyr
 #'

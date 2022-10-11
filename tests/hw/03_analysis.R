@@ -19,35 +19,35 @@ runs <- 100
 iterations <- 100
 
 # Vessels 2019
-# data(ais_2019) ; vessels <- ais_2019
-# outcome_dir <- 'tests/hw/ais_2019/'
-# encounter_rate(vessels, whales, outcome_dir,
-#                month_batches = list(winter = c(0:4, 11:12),
-#                                     summer = 5:10),
-#                runs  = runs, iterations = iterations, toplot = FALSE)
+data(ais_2019) ; vessels <- ais_2019
+outcome_dir <- 'tests/hw/ais_2019/'
+encounter_rate(vessels, whales, outcome_dir,
+               month_batches = list(winter = c(0:4, 11:12),
+                                    summer = 5:10),
+               runs  = runs, iterations = iterations, toplot = FALSE)
 
 # Vessels 2015
-# data(ais_2015)
-# encounter_rate(vessels = ais_2015,
-#                whales = whales,
-#                outcome_dir = 'tests/hw/ais_2015/',
-#                month_batches = list(winter = c(0:4, 11:12),
-#                                     summer = 5:10),
-#                runs  = 100, iterations = 100, toplot = FALSE)
+data(ais_2015)
+encounter_rate(vessels = ais_2015,
+               whales = whales,
+               outcome_dir = 'tests/hw/ais_2015/',
+               month_batches = list(winter = c(0:4, 11:12),
+                                    summer = 5:10),
+               runs  = 100, iterations = 100, toplot = FALSE)
 
 # LNG Canada
-# data(lng_canada) ; vessels <- lng_canada
-# outcome_dir <- 'tests/hw/lng_canada/'
-# encounter_rate(vessels, whales, outcome_dir,
-#                month_batches = list(all = 1:12),
-#                runs  = runs, iterations = iterations, toplot = TRUE)
+data(lng_canada) ; vessels <- lng_canada
+outcome_dir <- 'tests/hw/lng_canada/'
+encounter_rate(vessels, whales, outcome_dir,
+               month_batches = list(all = 1:12),
+               runs  = runs, iterations = iterations, toplot = TRUE)
 
 # Cedar LNG
-# data(cedar_lng) ; vessels <- cedar_lng
-# outcome_dir <- 'tests/hw/cedar_lng/'
-# encounter_rate(vessels, whales, outcome_dir,
-#                month_batches = list(all = 1:12),
-#                runs  = runs, iterations = iterations, toplot = FALSE)
+data(cedar_lng) ; vessels <- cedar_lng
+outcome_dir <- 'tests/hw/cedar_lng/'
+encounter_rate(vessels, whales, outcome_dir,
+               month_batches = list(all = 1:12),
+               runs  = runs, iterations = iterations, toplot = FALSE)
 
 
 ################################################################################

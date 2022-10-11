@@ -22,10 +22,6 @@ vessel_grid(grids, vessels, toplot = FALSE, verbose = TRUE)
 \item \code{datetime} = Datetime in UTC, with format \verb{yyyy-mm-dd hh:mm:ss}
 \item \code{x} = Longitude, decimal degrees (Western degrees negative)
 \item \code{y} = Latitude, decimal degrees (Southern degrees negative)
-\item \code{km}= The distance traveled (km) in this interpolated segment
-\item \code{year} = Numeric year
-\item \code{month} = Numeric month (1-12)
-\item \code{yday} = Numerical day of year
 }}
 
 \item{toplot}{A Boolean; if \code{TRUE}, progress plots will be shown.}
@@ -40,4 +36,10 @@ and the grid cell id associated with each position fix.
 This function determines each spatial grid cell intersected by each vessel transit.
 To do so, it interpolates position fixes to ensure that there is one at least every
 0.5 km.
+}
+\examples{
+data(grid_kfs)
+data(ais_2019)
+vessel_grid(grid_kfs, ais_2019)
+
 }

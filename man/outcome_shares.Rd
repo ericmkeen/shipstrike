@@ -7,11 +7,14 @@
 outcome_shares(outcomes, verbose = TRUE)
 }
 \arguments{
-\item{outcomes}{desc}
+\item{outcomes}{A \code{data.frame} of results from the \code{shipstrike::gather_outcomes()} function.}
 }
 \value{
-desc
+A named \code{list}.
 }
 \description{
-Share of risk by vessel type, channel, month, and diel period
+This function uses a bootstrapping routine (described in Keen et al. 2023)
+to estimate the share of risk attributable to each level for vessel type,
+channel, month, and diel period. It does this for each outcome type
+(cooccurrence, close encounter, …, mortality).
 }

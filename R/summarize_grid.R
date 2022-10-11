@@ -1,5 +1,6 @@
 #' Summarize vessel grid by type, month, diel, and grid_id
 #'
+#' This function is not typically called by the user.
 #' This is essentially a wrapper for a `dplyr::group_by() ... summarize()` sequence.
 #'
 #' @param vgrid An interpolated record of vessel position fixes,

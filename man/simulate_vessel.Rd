@@ -69,5 +69,5 @@ with the following columns:
 }
 }
 \description{
-Simulate a set of vessel transits on a spatial grid
+This function is deprecated but may still be useful in some contexts.
 }

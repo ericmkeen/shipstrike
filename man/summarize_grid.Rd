@@ -28,5 +28,6 @@ Pass this slot to the \code{params.ship} input in \code{encounter_simulator()}.
 }
 }
 \description{
+This function is not typically called by the user.
 This is essentially a wrapper for a \verb{dplyr::group_by() ... summarize()} sequence.
 }

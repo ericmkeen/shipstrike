@@ -11,15 +11,15 @@ outcome_chances(
 )
 }
 \arguments{
-\item{outcomes}{desc}
+\item{outcomes}{A \code{data.frame} of results from the \code{shipstrike::gather_outcomes()} function.}
 
 \item{collision_var}{desc}
 
 \item{mortality_Var}{desc}
 }
 \value{
-desc
+A named \code{list}.
 }
 \description{
-Chances of at least / no more than X interactions
+This function predicts the chances of certain outcome severities.
 }

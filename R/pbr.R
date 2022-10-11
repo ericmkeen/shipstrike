@@ -8,7 +8,7 @@
 #' @param Fr Recovery factor. Default is that for a depleted cetacean stock, recommended by NMFS (2016).
 #' @param toplot Boolean, whether or not to plot the distribution of the abundance estimate.
 #'
-#' @return A simple list
+#' @return A simple named `list` with slots `$PBR`, `$Nmin`, `$Rmax`, `$Fr`, and `$Nmedian`.
 #' @export
 #'
 pbr <- function(N, CV, Rmax=0.08, Fr=0.5, toplot=FALSE){

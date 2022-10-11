@@ -23,3 +23,8 @@ local vertical angle of the sun at each row.
 \description{
 This is essentially a convenient wrapper for \code{suncalc::getSunlightPosition}.
 }
+\examples{
+data(ais_2019)
+vessel_sun_angle(ais_2019)
+
+}

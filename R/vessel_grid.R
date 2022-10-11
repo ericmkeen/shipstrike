@@ -18,10 +18,6 @@
 #' \item `datetime` = Datetime in UTC, with format `yyyy-mm-dd hh:mm:ss`
 #' \item `x` = Longitude, decimal degrees (Western degrees negative)
 #' \item `y` = Latitude, decimal degrees (Southern degrees negative)
-#' \item `km`= The distance traveled (km) in this interpolated segment
-#' \item `year` = Numeric year
-#' \item `month` = Numeric month (1-12)
-#' \item `yday` = Numerical day of year
 #' }
 #' @param toplot A Boolean; if `TRUE`, progress plots will be shown.
 #' @param verbose A Boolean; if `TRUE`, updates will be printed to the Console.
@@ -30,6 +26,11 @@
 #' and the grid cell id associated with each position fix.
 #'
 #' @export
+#'
+#' @examples
+#' data(grid_kfs)
+#' data(ais_2019)
+#' vessel_grid(grid_kfs, ais_2019)
 #'
 vessel_grid <- function(grids,
                         vessels,

@@ -7,11 +7,11 @@
 transit_ellipses(transits)
 }
 \arguments{
-\item{transits}{desc}
+\item{transits}{A list of transit details produced during the \code{encounter_rate()} code.}
 }
 \value{
-desc
+A \code{list}.
 }
 \description{
-Produce ellipses and test for close encounters
+This is an internal \code{shipstrike} function not called directly by users.
 }

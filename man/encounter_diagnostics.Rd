@@ -7,14 +7,18 @@
 encounter_diagnostics(transits, id = NULL, wait = TRUE)
 }
 \arguments{
-\item{transits}{desc}
+\item{transits}{The result of \code{encounter_rate()} in which \code{runs} is set to \code{1}.}
 
-\item{id}{desc}
+\item{id}{The iteration ID for which you want a detailed diagnostic plot. Can be
+left \code{NULL}, which will begin at the first iteration then step through every iteration
+in the \code{transits} object until you press Escape.}
 
-\item{wait}{desc}
+\item{wait}{Boolean, with default \code{TRUE}, indicating if you want \code{R} to wait for you
+to press \code{Enter} between each iteration, or just move automatically through the entire
+\code{transits} object.}
 }
 \value{
-desc
+A series of diagnostic plots depicting the details of a close-encounter simulation iteration.
 }
 \description{
 Plot diagnostics for a single encounter-rate transit

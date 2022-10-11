@@ -16,17 +16,19 @@ outcome_histograms(
 \arguments{
 \item{outcomes}{A \code{data.frame} of results from the \code{shipstrike::gather_outcomes()} function.}
 
-\item{surface_var}{desc}
+\item{surface_var}{The 'strike zone event' variable to use (\code{"surface1"} or \code{"surface2"})}
 
-\item{collision_var}{desc}
+\item{collision_var}{The \code{collision} variable to use. See output of \code{outcome_predict()}.}
 
-\item{mortality_var}{desc}
+\item{mortality_var}{The \code{mortality} variable to use.  See output of \code{outcome_predict()}.}
 
-\item{orientation}{desc}
+\item{orientation}{Character; \code{"vertical"} or \code{"horizontal"}.}
 }
 \value{
-desc
+A \code{ggplot2} object.
 }
 \description{
-Create histograms summarizing whale-ship outcomes
+This function produces pretty histograms of the posterior distributions of
+outcome predictions (the default is to only show the outcomes for scenarios
+in which strike zone is 1.5x draft and avoidance is a function of vessel speed).
 }

@@ -12,17 +12,19 @@ lethality_curve(
 )
 }
 \arguments{
-\item{speeds}{desc}
+\item{speeds}{A vector of speeds at which to predict P(Lethality).}
 
-\item{c1}{desc}
+\item{c1}{First parameter}
 
-\item{c2}{desc}
+\item{c2}{Second parameter}
 
-\item{asymptote}{desc}
+\item{asymptote}{Upper asymptote of the function.}
 }
 \value{
-
+A \code{data.frame}.
 }
 \description{
-Produce a P(Lethality) ~ Speed curve
+This function returns the Probability of Lethality for a range of speeds based on
+a logistic function of form: \code{P(Lethality) = asymptote/ (1 + exp(-1*(c1 + (c2*speeds))))}.
+The defaults are the values used in \emph{Keen et al. (2023)} for large ships > 180m.
 }

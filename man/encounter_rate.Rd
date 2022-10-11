@@ -2,12 +2,12 @@
 % Please edit documentation in R/encounter_rate.R
 \name{encounter_rate}
 \alias{encounter_rate}
-\title{New encounter rate function}
+\title{Simulator to estimate whale-vessel close-encounter rate}
 \usage{
 encounter_rate(
   vessels,
   whales,
-  outcome_dir,
+  outcome_dir = "",
   month_batches = list(winter = c(0:4, 11:12), summer = 5:10),
   speed_restriction = NULL,
   lengths_restricted = 0,
@@ -18,28 +18,78 @@ encounter_rate(
 )
 }
 \arguments{
-\item{vessels}{desc}
+\item{vessels}{A \code{data.frame} of vessel position fixes. Each row ought to be
+a position fix within a spatial grid cell for a single transit from a single vessel,
+with no more than one row per cell-transit-vessel.  Require fields:
+\itemize{
+\item \code{grid_id} = Grid cell identifier.
+\item \code{vid} = Unique vessel identifier (numeric)
+\item \code{type} = Vessel type (character string)
+\item \code{speed} = Vessel speed, in knots (numeric)
+\item \code{length} = Vessel length, in meters (numeric)
+\item \code{width} = Vessel beam width, in meters (numeric)
+\item \code{draft} = Vessel beam width, in meters (numeric)
+\item \code{datetime} = Datetime in UTC, with format \verb{yyyy-mm-dd hh:mm:ss}
+\item \code{x} = Longitude, decimal degrees (Western degrees negative)
+\item \code{y} = Latitude, decimal degrees (Southern degrees negative)
+\item \code{year} = Year (yyyy)
+\item \code{diel} = Diel period -- either \code{"day"} or \code{"night"} (character)
+}}
 
-\item{whales}{desc}
+\item{whales}{A \code{list} providing parameters for whale dimensions, speed, and directivity.
+For examples, see the \code{shipstrike} functions \code{fin_params()} or \code{humpback_params()}.}
 
-\item{outcome_dir}{desc}
+\item{outcome_dir}{Path specifiying the directory into which the simulator result will be saved.
+Default is your working directory.}
 
-\item{month_batches}{desc}
+\item{month_batches}{A list specifying how months of vessel traffic should be grouped together
+into seasons.}
 
-\item{speed_restriction}{Apply a maximum speed, converting all vessel positions
-that exceed that maximum to the maximum.}
+\item{speed_restriction}{Option to apply a maximum speed, in knots, converting all vessel positions
+that exceed that maximum to the maximum. This is a convenience input that allows you to see the effect of
+a speed-restriction mitigation measure on the encounter rate.}
 
-\item{lengths_restricted}{Minimum length affected by speed restriction, if any.}
+\item{lengths_restricted}{Option to specify the minimum length to which the above speed restriction would apply.
+This lets you apply the speed restriction only to certain ship lengths.}
 
-\item{new_speeds}{desc}
+\item{new_speeds}{Another option to applying virtual mitigation measures: specify a new vector
+of ship speeds (can be length \code{1} or the same as the number of rows in\code{vessels}).}
 
-\item{runs}{desc}
+\item{runs}{The number of runs. Each run produces a single estimate of the encounter rate
+based on the fraction of \code{iterations} that results in a close-encounter.
+Note that if \code{runs} is \code{1}, the function will return detailed diagnostics on the simulation.
+If \code{runs} is more than \code{1}, simple results will be returned instead.}
 
-\item{iterations}{desc}
+\item{iterations}{The number of simulations to produce for each run of the simulator.
+The fraction of these iterations that result in a close-encounter is taked as the estimate
+of the encounter rate for that run.}
 }
 \value{
-desc (note that if runs == 1, a detailed dataframe will be returned (about 2.5 million rows))
+If \code{runs} is more than \code{1} (we recommend at least 100 for a
+minimum acceptable posterior distribution size), a \code{data.frame} will be returned
+with 5 fields: \code{type} (the vessel type), \code{month}, \code{diel}, \code{i} (the run identifier),
+and \code{p_encounter} (the estimate of the encounter rate for that run). Each row
+is the result of a single run.
+If \code{runs} is just \code{1}, a detailed \code{data.frame} will be returned which
+can be passed to \code{shipstrike::encounter_diagnostics} for
+a data-rich QA/QC overview of the encounter rate simulation process.
+
+See the package vignette for examples.
 }
 \description{
-New encounter rate function
+In the \code{shipstrike} framework, the "close-encounter rate" is
+the rate at which a vessel and whale are expected to intersect in time and
+horizontal space assuming no avoidance measures are taken. In other words, it is
+the share of cooccurrences (i.e., whale and ship occur in same square km) that will
+lead to immediate overlap if not avoided.
+}
+\details{
+The close-encounter rate is influenced by vessel parameters (dimensions, speed, directionality)
+as well as whale parameters (dimensions, speed, directionality), all of which change throughout the year
+and by diel period (i.e., daytime or nighttime).
+
+This function utilizes simulations to predict the close-encounter rate for each
+combination of vessel type, diel period, and "month batch" provided.
+This simulator is described in detail in Keen et al. (2022). It is designed to
+produce a posterior distribution of the encounter rate estimate.
 }
