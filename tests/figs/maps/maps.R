@@ -158,7 +158,7 @@ varmap <- function(gridr,
            pch = 15,
            pt.cex = 1.65,
            box.lwd = 0,
-           bg = adjustcolor('white',alpha.f=.5))
+           bg = adjustcolor('white',alpha.f=1))
   }
 
 
@@ -453,11 +453,12 @@ seasonal_boot$month %>% table
 df %>% head
 
 season_boots <- data.frame()
+months <- 1:12
 mi=7
 for(mi in 1:length(months)){
   (monthi <- months[mi])
   print(monthi)
-  seasi <- seasonal_boot %>% dplyr::filter(m == monthi)
+  seasi <- seasonal_boot %>% dplyr::filter(month == monthi)
   nrow(seasi)
   head(seasi)
   hist(seasi$scaled)
@@ -547,7 +548,8 @@ gg_fw_seasonal <-
   scale_x_continuous(breaks=1:12, labels=months) +
   scale_y_continuous(n.breaks=8, limits=c(0,0.025)) +
   labs(y = expression(paste("Fin whales ", km^{-2})), x = NULL) +
-  theme_light()
+  theme_light() +
+  theme(panel.grid.minor = element_blank())
 
 gg_fw_seasonal
 
@@ -629,7 +631,8 @@ gg_hw_seasonal <-
   scale_x_continuous(breaks=1:12, labels=months) +
   scale_y_continuous(n.breaks=8) +
   labs(y = expression(paste("Humpback whales ", km^{-2})), x = NULL) +
-  theme_light()
+  theme_light() +
+  theme(panel.grid.minor = element_blank())
 
 gg_hw_seasonal
 
@@ -639,7 +642,8 @@ gg_hw_seasonal
 # Combine the two species' plots
 
 library(ggpubr)
-pdf(file='figs/seasonal.pdf', width=9, height=3)
+#tiff(file='tests/figs/seasonal.tiff', res=150, width=(9*150), height=(3*150))
+pdf(file='tests/figs/seasonal.pdf', width=9, height=3)
 ggarrange(gg_fw_seasonal, gg_hw_seasonal, nrow=1, labels='auto')
 dev.off()
 

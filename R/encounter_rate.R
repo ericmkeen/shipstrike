@@ -62,6 +62,14 @@
 #' The fraction of these iterations that result in a close-encounter is taked as the estimate
 #' of the encounter rate for that run.
 #'
+#' @param toplot Boolean; show plots?
+#'
+#' @param xlims Optional range of x axis (two-element numeric vector), if `toplot` is TRUE.
+#' If not provided, range will be determined by results.
+#'
+#' @param ylims Optional range of y axis (two-element numeric vector0, if `toplot` is TRUE
+#' If not provided, range will be determined by results.
+#'
 #' @return If `runs` is more than `1` (we recommend at least 100 for a
 #' minimum acceptable posterior distribution size), a `data.frame` will be returned
 #' with 5 fields: `type` (the vessel type), `month`, `diel`, `i` (the run identifier),
@@ -89,7 +97,9 @@ encounter_rate <- function(vessels,
                            new_speeds = NULL,
                            runs = 100,
                            iterations = 100,
-                           toplot = TRUE){
+                           toplot = TRUE,
+                           xlims=NULL,
+                           ylims=NULL){
 
   # debugging ##################################################################
 
@@ -375,6 +385,7 @@ encounter_rate <- function(vessels,
               # Create ellipses for near encounters  ===========================
               # and test for actual close encounters
 
+              nenc <- 0
               if(nrow(mri) > 0){
 
                 # Analyze
@@ -397,8 +408,8 @@ encounter_rate <- function(vessels,
 
               # Review
               mr$encounter %>% table
-              nenc
-              ids
+              #nenc
+              #ids
 
               # Quick plot  ======================================================
               if(toplot){
@@ -420,6 +431,12 @@ encounter_rate <- function(vessels,
                 if(length(mri) > 0){
                   p <- p + geom_point(data=mri %>% bind_rows(),
                                       aes(x=x_rostrum, y=y_rostrum, group=id_ship), alpha=.2, size=.4, color='firebrick')
+                }
+                if(!is.null(xlims)){
+                  p <- p + xlim(xlims[1], xlims[2])
+                }
+                if(!is.null(ylims)){
+                  p <- p + ylim(ylims[1], ylims[2])
                 }
                 if(nenc > 0){
                   # Get a df of only the first moment of each encounter

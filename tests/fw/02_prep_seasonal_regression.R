@@ -13,7 +13,7 @@ library(MASS)
 
 #remotes::install_github("stan-dev/rstanarm")
 
-df <- read.csv('tests/prep/encounter_rates.csv',stringsAsFactors=FALSE)
+df <- read.csv('tests/seasonal/encounter_rates.csv',stringsAsFactors=FALSE)
 head(df)
 
 df$rate %>% hist

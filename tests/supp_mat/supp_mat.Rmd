@@ -196,12 +196,12 @@ ais_trends <-
 #sum(ais_trends$km_2030) / sum(ais_trends$km_2019)
 
 names(ais_trends) <- c('Vessel class', '2014', '2015', '2018', '2019', '2030', 
-                       'Scale factor', '2019', '2039', 'p-value')
+                       'Scale factor', '2019', '2030', 'p-value')
 
 knitr::kable(ais_trends,
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = 'Table S3. Trends (historical and predicted) in AIS traffic, 2014 - 2030. Kilometers transited in 2014 - 2019 are observations, while the 2030 numbers are predicted based on linear models. The "scale factor" is the multiplier used, based on those models, to estimate 2030 transits based on 2019 data. "Prop. change" is the proportional rate of change in total transits. The p-value refers to the linear model for each vessel class.') %>%
+             caption = 'Table S3. Trends (historical and predicted) in AIS traffic, 2014 - 2030. Kilometers transited in 2014 - 2019 are observations, while the 2030 numbers are predicted based on linear models. The "scale factor" is the multiplier used, based on those models, to estimate 2030 transits based on 2019 data. "Prop. change" is the proportional rate of annual change in total transits (e.g., the "2019" proportion column shows the rate of change as a proportion of 2019 transits). The p-value refers to the linear model for each vessel class.') %>%
   kable_styling(font=10) %>% 
   add_header_above(header=c(" " = 1, 
                             "Kilometers transited" = 5, 
@@ -1816,7 +1816,7 @@ knitr::kable(intkable,
              align = c('r', 'r','r','c','c','c','c','c','c','c','c'),
              longtable = T,
              booktabs = TRUE, linesep = '',
-             caption = 'Table S21. Predicted rates of collision and mortality for each vessel class (> 180m) and each whale species.') %>%
+             caption = 'Table S21. Predicted rates of collision and mortality for large ships (> 180m) in each traffic scheme and for each whale species.') %>%
   #kable_styling(latex_options="scale_down") %>% 
   kable_styling(font=10) %>% 
   add_header_above(header=c(" " = 3, "Fin whales" = 4, 'Humpback whales' = 4)) %>% row_spec (0, bold = T)
@@ -2097,7 +2097,7 @@ names(sharekable) <- c('Waterway',
 knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = paste0('Table S22. Share of collision and mortality risk attributable to each waterway, in 2019 and in 2030.')) %>%
+             caption = paste0('Table S22. Share of large ship (>180m) collision and mortality risk attributable to each waterway, in 2019 and in 2030.')) %>%
   kable_styling(font=11) %>% 
   add_header_above(header=c(" " = 1, 
                             "Collision" = 2, 'Mortality' = 2,
@@ -2186,7 +2186,7 @@ names(sharekable) <- c('Month',
 knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = paste0('Table S23. Share of collision and mortality risk attributable to each month, in 2019 and in 2030.')) %>%
+             caption = paste0('Table S23. Share of large ship (>180m) collision and mortality risk attributable to each month, in 2019 and in 2030.')) %>%
   kable_styling(font=11) %>% 
   add_header_above(header=c(" " = 1, 
                             "Collision" = 2, 'Mortality' = 2,
@@ -2271,7 +2271,7 @@ names(sharekable) <- c('Diel period',
 knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = paste0('Table S24. Share of collision and mortality risk attributable to each diel period, in 2019 and in 2030.')) %>%
+             caption = paste0('Table S24. Share of large ship (>180m) collision and mortality risk attributable to each diel period, in 2019 and in 2030.')) %>%
   kable_styling(font=11) %>% 
   add_header_above(header=c(" " = 1, 
                             "Collision" = 2, 'Mortality' = 2,
@@ -2371,7 +2371,7 @@ knitr::kable(chances,
              align = c('r','r','c','c','c','c','c','c','c','c','c','c'),
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = 'Table S25. Chances of various impact severities for fin whales and humpback whales, due to present-day AIS-transmitting traffic (represented by 2019 traffic), projected AIS-transmitting traffic in 2030, projected LNG Canada traffic, projected Cedar LNG traffic, then all traffic in 2030 (previous categories combined).') %>%
+             caption = 'Table S25. Chances of various large ship (>180m) impact severities for fin whales and humpback whales, due to present-day AIS-transmitting traffic (represented by 2019 traffic), projected AIS-transmitting traffic in 2030, projected LNG Canada traffic, projected Cedar LNG traffic, then all traffic in 2030 (previous categories combined).') %>%
   #kable_styling(latex_options="scale_down") %>% 
   kable_styling(font=10) %>% 
    add_header_above(header=c(" " = 2, 
@@ -2444,7 +2444,7 @@ knitr::kable(chances,
              align = c('r','r','c','c','c','c','c','c','c','c','c','c'),
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = 'Table S26. Chances of various impact severities for fin whales and humpback whales, similar to above, now described as the chances of experiencing *no more than* the stated number of events.') %>%
+             caption = 'Table S26. Chances of large ship (>180m) impact severities for fin whales and humpback whales, similar to above, now described as the chances of experiencing *no more than* the stated number of events.') %>%
 #kable_styling(latex_options="scale_down") %>% 
 kable_styling(font=10) %>% 
       add_header_above(header=c(" " = 2, 

@@ -16,7 +16,7 @@ MR <- data.frame()
 ################################################################################
 
 #Bring in data
-workdir <- "tests/prep/seasonal/fin/2017/"
+workdir <- "tests/seasonal/fin/2017/"
 lf <- list.files(workdir) ; lf
 mm <- read.csv(paste0(workdir,"mm.csv"),stringsAsFactors=FALSE) ; head(mm)
 scans <- read.csv(paste0(workdir,"scans.csv"),stringsAsFactors=FALSE) ; head(scans)
@@ -114,7 +114,7 @@ abline(h=1,lty=3)
 ################################################################################
 
 #Bring in data
-workdir <- "tests/prep/seasonal/fin/2018/"
+workdir <- "tests/seasonal/fin/2018/"
 lf <- list.files(workdir) ; lf
 mm <- read.csv(paste0(workdir,"mm.csv"),stringsAsFactors=FALSE) ; head(mm)
 scans <- read.csv(paste0(workdir,"scans.csv"),stringsAsFactors=FALSE) ; head(scans)
@@ -213,7 +213,7 @@ abline(h=1,lty=3)
 ################################################################################
 
 #Bring in data
-workdir <- "tests/prep/seasonal/fin/2019/"
+workdir <- "tests/seasonal/fin/2019/"
 lf <- list.files(workdir) ; lf
 mm <- read.csv(paste0(workdir,"mm.csv"),stringsAsFactors=FALSE) ; head(mm)
 scans <- read.csv(paste0(workdir,"scans.csv"),stringsAsFactors=FALSE) ; head(scans)
@@ -312,7 +312,7 @@ abline(h=1,lty=3)
 ################################################################################
 
 #Bring in data
-workdir <- "tests/prep/seasonal/fin/2020/"
+workdir <- "tests/seasonal/fin/2020/"
 lf <- list.files(workdir) ; lf
 mm <- read.csv(paste0(workdir,"mm.csv"),stringsAsFactors=FALSE) ; head(mm)
 scans <- read.csv(paste0(workdir,"scans.csv"),stringsAsFactors=FALSE) ; head(scans)
@@ -413,7 +413,7 @@ abline(h=1,lty=3)
 ################################################################################
 
 #Bring in data
-workdir <- "tests/prep/seasonal/fin/2021/"
+workdir <- "tests/seasonal/fin/2021/"
 lf <- list.files(workdir) ; lf
 mm <- read.csv(paste0(workdir,"mm.csv"),stringsAsFactors=FALSE) ; head(mm)
 scans <- read.csv(paste0(workdir,"scans.csv"),stringsAsFactors=FALSE) ; head(scans)
@@ -530,7 +530,7 @@ ggplot(df, aes(x=doy, y=scaled, color=species)) +
   labs(color='Species') +
   facet_wrap(~year)
 
-write.csv(df, file='tests/prep/encounter_rates.csv', row.names=FALSE, quote=FALSE)
+write.csv(df, file='tests/seasonal/encounter_rates.csv', row.names=FALSE, quote=FALSE)
 
 
 
