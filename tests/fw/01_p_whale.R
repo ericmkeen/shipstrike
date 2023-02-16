@@ -245,11 +245,12 @@ dsm1.xyb %>% AIC
 dsm1.xy %>% AIC
 
 # Round 2
-dsm2.z <- dsm(density.est~s(x,y) + s(zrange) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
+dsm2.z <- dsm(density.est~te(x,y) + s(zrange) + s(z), dso_keep, sample_table, data_table, family=tw(), method="REML")
 summary(dsm2.z)
 vis.gam(dsm2.z, plot.type="contour", view=c("x","y"), asp=1, type="response", contour.col="black", n.grid=100, zlim=c(0,.5))
 par(mfrow=c(2,2), mar=c(4.2,4.2,3,.5)) ; gam.check(dsm2.z) ; par(mfrow=c(1,1))
 AIC(dsm2.z)
+plot(dsm2.z)
 
 #dsm2.zrange <- dsm(density.est~s(x,y) + s(doy) + s(zrange), dso_keep, sample_table, data_table, family=tw(), method="REML")
 #summary(dsm2.zrange)

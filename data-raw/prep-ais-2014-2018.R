@@ -108,13 +108,14 @@ ais$type %>% table
 newtype <- rep('Other < 40m',times=nrow(ais))
 newtype[ais$length > 40] <- 'Other > 40m'
 newtype[ais$length > 100] <- 'Other > 100m'
-newtype[ais$type %in% types[c(9)] & ais$length < 40] <- 'Pleasurecraft < 40m'
-newtype[ais$type %in% types[c(4, 7)] & ais$length < 50] <- 'Towing < 50m'
+newtype[ais$type %in% types[c(11)] & ais$length < 40] <- 'Pleasurecraft < 40m'
+newtype[ais$type %in% types[c(4, 6)] & ais$length < 50] <- 'Towing < 50m'
 newtype[ais$type %in% types[c(3)] & ais$length < 50] <- 'Tug < 50m'
-newtype[ais$type %in% types[c(2, 17)] & ais$length >= 180] <- 'Passenger > 180m'
-newtype[ais$type %in% types[c(5, 21)] & ais$length >= 180] <- 'Cargo > 180m'
-newtype[ais$type %in% types[c(13)]] <- 'Sailing'
-newtype[ais$type %in% types[c(6)] & ais$length < 60] <- 'Fishing < 60m'
+newtype[ais$type %in% types[c(2)] & ais$length >= 180] <- 'Passenger > 180m'
+newtype[ais$type %in% types[c(8)] & ais$length >= 180] <- 'Cargo > 180m'
+newtype[ais$type %in% types[c(15)]] <- 'Sailing'
+newtype[ais$type %in% types[c(10)] & ais$length < 60] <- 'Fishing < 60m'
+newtype[ais$type %in% types[c(12, 19)] & ais$length > 180] <- 'Tanker > 180m'
 
 newtype %>% table
 
@@ -126,15 +127,13 @@ ggplot(ais, aes(x=length)) +
   geom_histogram() +
   facet_wrap(~type, scales='free') +
   ylab('AIS records') +
-  xlab('Reported length (m)') +
-  labs(title = 'Lengths (meters) for 2019 vessel types used in analysis')
+  xlab('Reported length (m)')
 
 ggplot(ais, aes(x=speed)) +
   geom_histogram() +
   facet_wrap(~type, scales='free') +
   ylab('AIS records') +
-  xlab('Reported speed (knots)') +
-  labs(title = 'Speed (knots) for 2019 vessel types used in analysis')
+  xlab('Reported speed (knots)')
 
 ################################################################################
 
@@ -260,13 +259,14 @@ ais$type %>% table
 newtype <- rep('Other < 40m',times=nrow(ais))
 newtype[ais$length > 40] <- 'Other > 40m'
 newtype[ais$length > 100] <- 'Other > 100m'
-newtype[ais$type %in% types[c(9)] & ais$length < 40] <- 'Pleasurecraft < 40m'
-newtype[ais$type %in% types[c(4, 7)] & ais$length < 50] <- 'Towing < 50m'
-newtype[ais$type %in% types[c(3)] & ais$length < 50] <- 'Tug < 50m'
-newtype[ais$type %in% types[c(2, 17)] & ais$length >= 180] <- 'Passenger > 180m'
-newtype[ais$type %in% types[c(5, 21)] & ais$length >= 180] <- 'Cargo > 180m'
-newtype[ais$type %in% types[c(13)]] <- 'Sailing'
-newtype[ais$type %in% types[c(6)] & ais$length < 60] <- 'Fishing < 60m'
+newtype[ais$type %in% types[c(10)] & ais$length < 40] <- 'Pleasurecraft < 40m'
+newtype[ais$type %in% types[c(1, 4)] & ais$length < 50] <- 'Towing < 50m'
+newtype[ais$type %in% types[c(5)] & ais$length < 50] <- 'Tug < 50m'
+newtype[ais$type %in% types[c(2)] & ais$length >= 180] <- 'Passenger > 180m'
+newtype[ais$type %in% types[c(7, 14, 16)] & ais$length >= 180] <- 'Cargo > 180m'
+newtype[ais$type %in% types[c(12)]] <- 'Sailing'
+newtype[ais$type %in% types[c(3)] & ais$length < 60] <- 'Fishing < 60m'
+newtype[ais$type %in% types[c(9, 15)] & ais$length > 180] <- 'Tanker > 180m'
 
 newtype %>% table
 
@@ -278,15 +278,13 @@ ggplot(ais, aes(x=length)) +
   geom_histogram() +
   facet_wrap(~type, scales='free') +
   ylab('AIS records') +
-  xlab('Reported length (m)') +
-  labs(title = 'Lengths (meters) for 2019 vessel types used in analysis')
+  xlab('Reported length (m)')
 
 ggplot(ais, aes(x=speed)) +
   geom_histogram() +
   facet_wrap(~type, scales='free') +
   ylab('AIS records') +
-  xlab('Reported speed (knots)') +
-  labs(title = 'Speed (knots) for 2019 vessel types used in analysis')
+  xlab('Reported speed (knots)')
 
 ################################################################################
 
@@ -412,13 +410,14 @@ ais$type %>% table
 newtype <- rep('Other < 40m',times=nrow(ais))
 newtype[ais$length > 40] <- 'Other > 40m'
 newtype[ais$length > 100] <- 'Other > 100m'
-newtype[ais$type %in% types[c(9)] & ais$length < 40] <- 'Pleasurecraft < 40m'
-newtype[ais$type %in% types[c(4, 7)] & ais$length < 50] <- 'Towing < 50m'
-newtype[ais$type %in% types[c(3)] & ais$length < 50] <- 'Tug < 50m'
-newtype[ais$type %in% types[c(2, 17)] & ais$length >= 180] <- 'Passenger > 180m'
-newtype[ais$type %in% types[c(5, 21)] & ais$length >= 180] <- 'Cargo > 180m'
+newtype[ais$type %in% types[c(5)] & ais$length < 40] <- 'Pleasurecraft < 40m'
+newtype[ais$type %in% types[c(6)] & ais$length < 50] <- 'Towing < 50m'
+newtype[ais$type %in% types[c(4)] & ais$length < 50] <- 'Tug < 50m'
+newtype[ais$type %in% types[c(7)] & ais$length >= 180] <- 'Passenger > 180m'
+newtype[ais$type %in% types[c(2, 17)] & ais$length >= 180] <- 'Cargo > 180m'
 newtype[ais$type %in% types[c(13)]] <- 'Sailing'
-newtype[ais$type %in% types[c(6)] & ais$length < 60] <- 'Fishing < 60m'
+newtype[ais$type %in% types[c(3)] & ais$length < 60] <- 'Fishing < 60m'
+newtype[ais$type %in% types[c(12)] & ais$length > 180] <- 'Tanker > 180m'
 
 newtype %>% table
 
@@ -430,15 +429,13 @@ ggplot(ais, aes(x=length)) +
   geom_histogram() +
   facet_wrap(~type, scales='free') +
   ylab('AIS records') +
-  xlab('Reported length (m)') +
-  labs(title = 'Lengths (meters) for 2019 vessel types used in analysis')
+  xlab('Reported length (m)')
 
 ggplot(ais, aes(x=speed)) +
   geom_histogram() +
   facet_wrap(~type, scales='free') +
   ylab('AIS records') +
-  xlab('Reported speed (knots)') +
-  labs(title = 'Speed (knots) for 2019 vessel types used in analysis')
+  xlab('Reported speed (knots)')
 
 ################################################################################
 

@@ -433,6 +433,9 @@ boots %>%
 ################################################################################
 # FIN Whale seasonality
 
+months <- c('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')
+months <- factor(months, levels=months)
+
 # Seasonal posterior
 load('tests/fw/seasonal_posterior.RData') %>% View
 seasonal_boot %>% head
@@ -547,7 +550,7 @@ gg_fw_seasonal <-
   geom_abline(slope=0, intercept=1, lty=3, color='steelblue3') +
   scale_x_continuous(breaks=1:12, labels=months) +
   scale_y_continuous(n.breaks=8, limits=c(0,0.025)) +
-  labs(y = expression(paste("Fin whales ", km^{-2})), x = NULL) +
+  labs(y = expression(paste("Fin whales ", km^{-2})), x = 'Month') +
   theme_light() +
   theme(panel.grid.minor = element_blank())
 
@@ -630,7 +633,7 @@ gg_hw_seasonal <-
   geom_line(lwd=.8, alpha=1.0) +
   scale_x_continuous(breaks=1:12, labels=months) +
   scale_y_continuous(n.breaks=8) +
-  labs(y = expression(paste("Humpback whales ", km^{-2})), x = NULL) +
+  labs(y = expression(paste("Humpback whales ", km^{-2})), x = 'Month') +
   theme_light() +
   theme(panel.grid.minor = element_blank())
 

@@ -1,6 +1,6 @@
 Package: shipstrike
 Title: Utilities for spatially- and temporally-explicit predictions of whale-ship collisions
-Version: 2.1.0
+Version: 2.2.0
 Authors@R: 
     person("Eric", "Keen", , "ericmkeen@gmail.com", role = c("aut", "cre"))
 Description: Utilities for spatially- and temporally-explicit predictions of whale-ship collisions

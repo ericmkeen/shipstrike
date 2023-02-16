@@ -1,10 +1,12 @@
 ---
 title: "Supplementary Materials"
-author: "Keen et al. (2022) Ship-strike forecast & mitigation for whales of the Gitga’at First Nation"
+author: Keen et al. (2023) Ship-strike forecast & mitigation for whales of the Gitga’at
+  First Nation
 date: "8/15/2022"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 header-includes: \usepackage{longtable}
 ---
 
@@ -42,7 +44,7 @@ names(aistab) <- c('Type','VIDs','Transits',
                    'mean', 'sd', 'min', 'max')
 knitr::kable(aistab,
              booktabs = TRUE, linesep = '',
-             caption = 'Table S1. Summary of 2019 marine traffic within the lower Kitimat Fjord System, as reported by archival AIS data.') %>%
+             caption = 'Table S1. Summary of 2019 marine traffic within the lower Kitimat Fjord System, as reported by archival AIS data. Column "VIDs" indicates number of unique Vessel ID codes observed for each vessel type.') %>%
   kable_styling(font=11) %>% 
    add_header_above(header=c(" " = 3, 
                             "Speed (kn)" = 3, 
@@ -213,7 +215,7 @@ knitr::kable(ais_trends,
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.2, fig.width = 8, fig.cap = 'Figure S5. Changes in total transit kilometers for the 10 vessel classes in our study, 2014 - 2019.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S5. Changes in total transit kilometers for the 10 vessel classes in our study, 2014 - 2019.'}
 ais_trends <- readRDS('../ais/vessel_trends_obs.RData')
 
 ggplot(ais_trends, mapping=aes(x=year, y=km, color=type)) +
@@ -322,7 +324,7 @@ names(df_tab) <- c('Species',names(df_tab_fw))
 knitr::kable(df_tab,
              booktabs = TRUE, linesep = '',
              #longtable = T,
-             caption = 'Table S6. Best-fitting models of the detection functions for fin whales and humpback whales, based upon 2013-2015 line-transect surveys.') %>%
+             caption = 'Table S6. Best-fitting models of the detection functions for fin whales and humpback whales, based upon 2013-2015 line-transect surveys. Abbreviation "bft" refers to Beaufort Sea State.') %>%
   #kable_styling(latex_options="scale_down") %>% 
 kable_styling(font=10) %>% 
     row_spec (0, bold = T)
@@ -352,6 +354,12 @@ Figure S8. Bathymetric characteristics of the study area, as summarized for the 
 &nbsp;  
 
 ## Humpback whale UAS analysis
+
+**Supplemental details to data collection & analysis:**  
+
+Briefly, a licensed pilot (author ÉOM, research permit DFO XR83 2019) launched the UAS (DJI Mavic 2 Pro, www.dji.com) opportunistically from either FIRS or a 6m research vessel. When deciding whether or not to launch a UAS flight, a conscientious effort was made not to give preference to certain behavioral states or demographic groups. The UAS was equipped with a Hasselblad camera, 1-Hz LiDAR (Light Detection And Ranging), and GPS data-logger. Throughout a whale’s surfacing sequence in between dives, the UAS was hovered above the whale at a target elevation of 30m. Stills were extracted from the video footage, their timestamps were matched to the LiDAR elevation data, and camera tilt was used to correct the altimeter reading. Images were evaluated using a three-tier quality score based upon water visibility, image sharpness and whale body position. Top-tier photographs required the entire length of the individual whale to be visible: from rostrum tip to fluke notch, without a visibly arched back. Middle-tier photographs required rostrum tip and fluke notch to be, at minimum, just visible without body arching, but image sharpness and/or water visibility were reduced. Bottom-tier photographs included all video stills where either the whale’s rostrum and/or fluke notch were not visible, preventing an estimate of length. Bottom-tier images were discarded, and only whales with at least one top-scored image were kept. Whale dimensions were measured using ‘Whalength’ (Dawson et al. 2017) in MATLAB (MathWorks Inc.). Measures from multiple images of the same whale were averaged to estimate length and fluke width, in meters. To confirm that middle-tier photographs were not biasing our results, we compared means derived solely from top-tier measurements to those from middle-tier measurements (Table S7).
+
+&nbsp;  
 
 ```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE}
 mr <- readRDS('../hw/hw_lengths.RData')
@@ -438,6 +446,17 @@ knitr::kable(lidar,
 
 
 ## Fin whale dive tag analysis 
+
+**Supplemental details for data collection & processing:**  
+
+Tags were deployed from 30-ft and 70-ft vessels in Squally Channel and the near vicinity (Caamaño Sound and southern Hecate Strait) using pneumatic rifles. The tags were programmed to sample whale depth once per second and store the depth reading every 75 s, then transmit these data in the form of batched messages via the Argos satellite system. Daily messages were limited to 500 in 2013 and 450 in 2014, effectively duty-cycling the depth sampling regime (Figure S9). A ground-based receiving station (Mote; Wildlife Computers) was installed near Squally Channel in 2014, improving the number of dive sensor messages that could be received from nearby-transmitting tags. Gaps of > 75 s in the depth sensor data were removed, and the sun altitude for each timestamp was calculated using the package ‘oce’ (Kelly & Richards 2022) based upon an approximate location for the geographic center of tag deployments (52.8 N, 129.8 W). Timestamps were then classified as nighttime or daytime according to a sun angle of -12 degrees (nautical dusk/dawn).  
+
+
+One tag (ID 7 in Table S9) yielded only 4 hours of valid depth sensor data during an 11-hour deployment, and was thus discarded, leaving six valid deployments. After this, the total depth samples across all tags was 9,793. Mean depth sample size per deployment was 1,631 (SD = 1,274). Daytime sample sizes (mean=1,164, SD=781) were higher than nighttime (mean=468, SD=518), due to the high-latitude summertime sampling. While 71% of depth records occurred during daytime, nighttime depths were sampled in all six deployments (Fig S10).  
+
+
+&nbsp;  
+
 
 ```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S9. Raw time- and depth-distributions of depth sensor readings for each of the 7 SPLASH-10 tag deployments.'}
 df <- readRDS('../psurface/tag_data.RData')
@@ -754,6 +773,12 @@ knitr::kable(dsmtab,
 
 &nbsp;  
 
+**Figure S16.** Smooth terms from species distribution models. 
+<p align="center">
+![](gam_smooths.png){width=85%}
+
+&nbsp;  
+
 ```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8}
 # FIN WHALES
 if(file.exists('d_fw.RData')){
@@ -1023,7 +1048,7 @@ knitr::kable(penctab,
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S16. Distributions of close-encounter rate estimates for each vessel type (row) and each whale species (color), based upon iterative simulations. Vertical lines indicate the median of each distribution. Here summertime and wintertime distributions are pooled.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S17. Distributions of close-encounter rate estimates for each vessel type (row) and each whale species (color), based upon iterative simulations. Vertical lines indicate the median of each distribution. Here summertime and wintertime distributions are pooled.'}
 
 # Plot it ======================================================================
 ggplot(penc, aes(x=p_encounter, y=type, fill=species)) + 
@@ -1071,7 +1096,7 @@ knitr::kable(surf_tab,
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap = 'Figure S17. Daytime (pink) and nighttime (teal) depth distribution curves for fin whale in and near the Kitimat Fjord System, representing the average proportion of time spent above a given depth across all tag deployments (n=6 in 2013 and 2014). Points on the left side of the plot represent the SD at each depth.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap = 'Figure S18. Daytime (pink) and nighttime (teal) depth distribution curves for fin whale in and near the Kitimat Fjord System, representing the average proportion of time spent above a given depth across all tag deployments (n=6 in 2013 and 2014). Points on the left side of the plot represent the SD at each depth.'}
 data(p_surface)
 
 ggplot(p_surface, aes(x=p_mean, y=z, color=diel)) +
@@ -1267,31 +1292,31 @@ print(ggpubr::ggarrange(ggintfw, gginthw, ncol=2))
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S18. Distribution of whale-vessel interaction rate predictions for AIS traffic in 2019.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S19. Distribution of whale-vessel interaction rate predictions for AIS traffic in 2019.'}
 gginteractions(fw$outcomes$ais_2019, hw$outcomes$ais_2019, 'AIS 2019')
 ```
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S19. Distribution of whale-vessel interaction rate predictions for AIS traffic in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S20. Distribution of whale-vessel interaction rate predictions for AIS traffic in 2030.'}
 gginteractions(fw$outcomes$ais_2030, hw$outcomes$ais_2030, 'AIS 2030')
 ```
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S20. Distribution of whale-vessel interaction rate predictions for LNG Canada traffic in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S21. Distribution of whale-vessel interaction rate predictions for LNG Canada traffic in 2030.'}
 gginteractions(fw$outcomes$lng_canada, hw$outcomes$lng_canada, 'LNG Canada')
 ```
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S21. Distribution of whale-vessel interaction rate predictions for Cedar LNG traffic in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S22. Distribution of whale-vessel interaction rate predictions for Cedar LNG traffic in 2030.'}
 gginteractions(fw$outcomes$cedar_lng, hw$outcomes$cedar_lng, 'Cedar LNG')
 ```
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S22. Distribution of whale-vessel interaction rate predictions for all traffic in 2030 (AIS and LNG combined).'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4.5, fig.width = 8, fig.cap = 'Figure S23. Distribution of whale-vessel interaction rate predictions for all traffic in 2030 (AIS and LNG combined).'}
 gginteractions(fwall, hwall, 'All traffic 2030')
 ```
 
@@ -1430,7 +1455,7 @@ ggshare <- function(mrs, ycol, tit=NULL, subtit, eventkey, levels, ylabi = NULL)
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=7, fig.width = 8, fig.cap = 'Figure S23. Share of interactions risk attributable to each vessel type, in 2019 and in 2030, for fin whales.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=7, fig.width = 8, fig.cap = 'Figure S24. Share of interactions risk attributable to each vessel type, in 2019 and in 2030, for fin whales.'}
 levels = sort(unique(fws$stot$vessel$vessel))
 
 #fw
@@ -1445,7 +1470,7 @@ ggpubr::ggarrange(gga, ggb, nrow=2, ncol=1)
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=7, fig.width = 8, fig.cap = 'Figure S24. Share of interaction risk attributable to each vessel type, in 2019 and in 2030, for humpback whales. '}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=7, fig.width = 8, fig.cap = 'Figure S25. Share of interaction risk attributable to each vessel type, in 2019 and in 2030, for humpback whales. '}
 gga <- ggshare(hws$s2019$vessel, 'vessel', 
         tit='Humpback whales', subtit='(a) 2019',
         eventkey = eventkey, levels=levels)
@@ -1525,7 +1550,7 @@ knitr::kable(sharekable, align = c('r','r','c','c','c','c','c'),
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S25. Share of interaction risk attributable to each waterway, in 2019 and in 2030, for fin whales.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S26. Share of interaction risk attributable to each waterway, in 2019 and in 2030, for fin whales.'}
 # Share of interactions - Waterways
 levels = c('CAA', 'EST', 'CMP', 'SQU', 'WHA', 'WRI', 'MCK', 'VER')
 
@@ -1541,7 +1566,7 @@ ggpubr::ggarrange(gga, ggb, nrow=2, ncol=1)
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S26. Share of interactions risk attributable to each waterway, in 2019 and in 2030, for humpback whales. '}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap = 'Figure S27. Share of interactions risk attributable to each waterway, in 2019 and in 2030, for humpback whales. '}
 # hw
 gga <- ggshare(hws$s2019$channel, 'channel', 
         tit='Humpback whales', subtit='(a) 2019',
@@ -1607,7 +1632,7 @@ knitr::kable(sharekable, align = c('r','r','c','c','c','c','c'),
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5.5, fig.width = 8, fig.cap = 'Figure S27. Share of interactions risk attributable to each month, in 2019 and in 2030, for fin whales. '}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5.5, fig.width = 8, fig.cap = 'Figure S28. Share of interactions risk attributable to each month, in 2019 and in 2030, for fin whales. '}
 # Share interactions -- Months
 levels = sort(unique(fws$stot$month$month))
 
@@ -1623,7 +1648,7 @@ ggpubr::ggarrange(gga, ggb, nrow=2, ncol=1)
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5.5, fig.width = 8, fig.cap = 'Figure S28. Share of interactions risk attributable to each month, in 2019 and in 2030, for humpback whales.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5.5, fig.width = 8, fig.cap = 'Figure S29. Share of interactions risk attributable to each month, in 2019 and in 2030, for humpback whales.'}
 #hw
 gga <- ggshare(hws$s2019$month, 'month', 
         tit='Humpback whales', subtit='(a) 2019',
@@ -1688,7 +1713,7 @@ knitr::kable(sharekable, align = c('r','r','c','c','c','c','c'),
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap = 'Figure S29. Share of interactions risk attributable to each diel period, in 2019 and in 2030, for fin whales.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap = 'Figure S30. Share of interactions risk attributable to each diel period, in 2019 and in 2030, for fin whales.'}
 # Share interactions -- Months
 levels = sort(unique(fws$stot$diel$diel))
 
@@ -1704,7 +1729,7 @@ ggpubr::ggarrange(gga, ggb, nrow=2, ncol=1)
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap = 'Figure S30. Share of interactions risk attributable to each diel period, in 2019 and in 2030, for humpback whales.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=3.5, fig.width = 8, fig.cap = 'Figure S31. Share of interactions risk attributable to each diel period, in 2019 and in 2030, for humpback whales.'}
 #hw
 gga <- ggshare(hws$s2019$diel, 'diel', 
         tit='Humpback whales', subtit='(a) 2019',
@@ -1824,7 +1849,7 @@ knitr::kable(intkable,
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 8, fig.cap='Figure S31. Posterior distributions of collision and mortality estimates for fin whales (a - b) and humpback whales (c-d), for each traffic scheme we analyzed.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=6, fig.width = 8, fig.cap='Figure S32. Posterior distributions of collision and mortality estimates for fin whales (a - b) and humpback whales (c-d), for each traffic scheme we analyzed.'}
 ggmort <- function(mr, mrall, tit, subtit, events){
   
 vessels <- c("Cargo > 180m", "Passenger > 180m", 
@@ -2005,7 +2030,7 @@ knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
   row_spec (0, bold = T)
 ```
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap='Figure S32. Share of collision and mortality risk attributable to each vessel type, in 2019 and in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap='Figure S33. Share of collision and mortality risk attributable to each vessel type, in 2019 and in 2030.'}
 # Share by vessel type
 mr1 <- fws$s2019$vessel %>% mutate(year=2019) %>% filter(event == 'mortality2.2')
 mr2 <- fws$stot$vessel %>% mutate(year=2030) %>% filter(event == 'mortality2.2')
@@ -2108,7 +2133,7 @@ knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap='Figure S33. Share of collision and mortality risk attributable to each waterway, in 2019 and in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8, fig.cap='Figure S34. Share of collision and mortality risk attributable to each waterway, in 2019 and in 2030.'}
 # Share by waterway
 mr1 <- fws$s2019$channel %>% mutate(year=2019) %>% filter(event == 'mortality2.2')
 mr2 <- fws$stot$channel %>% mutate(year=2030) %>% filter(event == 'mortality2.2')
@@ -2197,7 +2222,7 @@ knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8,  fig.cap='Figure S34. Share of collision and mortality risk attributable to each month, in 2019 and in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=5, fig.width = 8,  fig.cap='Figure S35. Share of collision and mortality risk attributable to each month, in 2019 and in 2030.'}
 # Share by month
 mr1 <- fws$s2019$month %>% mutate(year=2019) %>% filter(event == 'mortality2.2')
 mr2 <- fws$stot$month %>% mutate(year=2030) %>% filter(event == 'mortality2.2')
@@ -2282,7 +2307,7 @@ knitr::kable(sharekable, align = c('r','c','c','c','c','c','c','c','c'),
 
 &nbsp;  
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4, fig.width = 8,  fig.cap='Figure S35. Share of collision and mortality risk attributable to each diel period, in 2019 and in 2030.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=4, fig.width = 8,  fig.cap='Figure S36. Share of collision and mortality risk attributable to each diel period, in 2019 and in 2030.'}
 # Share by diel
 mr1 <- fws$s2019$diel %>% mutate(year=2019) %>% filter(event == 'mortality2.2')
 mr2 <- fws$stot$diel %>% mutate(year=2030) %>% filter(event == 'mortality2.2')
@@ -2475,7 +2500,7 @@ results <- outcome_validation(fw$outcomes$ais_2015 %>%
                                 filter(vessel %in% vessels))
 ```
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, collapse=TRUE, message = TRUE, fig.height=3, fig.width = 8, fig.cap='Figure S36. Results of ship-strike model validation for fin whales, in which the likelihood of not observing a strike in the last decade was estimated according to our model results. Left: Distribution of strike observations predicted with our models when assuming perfect detection (i.e., no strikes missed). The red dashed line indicates what we actually observed. Right: The probability of our observations under various scenarios of imperfect detection. Dashed lines indicate conventional alpha levels of significance.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, collapse=TRUE, message = TRUE, fig.height=3, fig.width = 8, fig.cap='Figure S37. Results of ship-strike model validation for fin whales, in which the likelihood of not observing a strike in the last decade was estimated according to our model results. Left: Distribution of strike observations predicted with our models when assuming perfect detection (i.e., no strikes missed). The red dashed line indicates what we actually observed. Right: The probability of our observations under various scenarios of imperfect detection. Dashed lines indicate conventional alpha levels of significance.'}
 ggarrange(results$L_plot, results$SDR_plot, labels='auto')
 ```
 
@@ -2488,7 +2513,7 @@ results <- outcome_validation(hw$outcomes$ais_2015 %>%
                                 filter(vessel %in% vessels))
 ```
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE,  collapse=TRUE, message = TRUE, fig.height=3, fig.width = 8.5, fig.cap='Fig S37. Results of ship-strike model validation for humpback whales, in which the likelihood of not observing a strike in the last decade was estimated according to our model results. Left: Distribution of strike observations predicted with our models when assuming perfect detection (i.e., no strikes missed). The red dashed line indicates what we actually observed. Right: The probability of our observations under various scenarios of imperfect detection. Dashed lines indicate conventional alpha levels of significance.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE,  collapse=TRUE, message = TRUE, fig.height=3, fig.width = 8.5, fig.cap='Fig S38. Results of ship-strike model validation for humpback whales, in which the likelihood of not observing a strike in the last decade was estimated according to our model results. Left: Distribution of strike observations predicted with our models when assuming perfect detection (i.e., no strikes missed). The red dashed line indicates what we actually observed. Right: The probability of our observations under various scenarios of imperfect detection. Dashed lines indicate conventional alpha levels of significance.'}
 ggarrange(results$L_plot, results$SDR_plot, labels='auto')
 ```
 
@@ -2504,7 +2529,7 @@ hwm <- readRDS('../hw/mitigation/mitigation.RData')
 
 ### Scenarios 3 (rescheduling) & 4 (moratoria) 
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=9, fig.width = 8, fig.cap = 'Figure S38. Efficacy of mitigation categories 3 (LNG rescheduling) and 4 (LNG moratoria) for fin whales, when those measures are applied to different months of the year for various durations (one - three months).'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=9, fig.width = 8, fig.cap = 'Figure S39. Efficacy of mitigation categories 3 (LNG rescheduling) and 4 (LNG moratoria) for fin whales, when those measures are applied to different months of the year for various durations (one - three months).'}
 # Fin whales 
 # One month rescheduled
 mri <- 
@@ -2599,7 +2624,7 @@ ggf <-
 ggarrange(gga, ggb, ggc, ggd, gge, ggf, ncol=2, nrow=3)
 ```
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=9, fig.width = 8, fig.cap='Figure S39. Efficacy of mitigation categories 3 (LNG rescheduling) and 4 (LNG moratoria) for humpback whales, when those measures are applied to different months of the year for various durations (one - three months).'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, fig.height=9, fig.width = 8, fig.cap='Figure S40. Efficacy of mitigation categories 3 (LNG rescheduling) and 4 (LNG moratoria) for humpback whales, when those measures are applied to different months of the year for various durations (one - three months).'}
 # Humpback whales 
 # One month rescheduled
 mri <- 
@@ -3106,7 +3131,7 @@ knitr::kable(mrtform,
 
 ```
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, include=FALSE, fig.height=5, fig.width = 8, fig.cap='Figure S42. Mean ship-strike mortality rates predicted for fin whales and humpback whales under various mitigation scenarios, compared to baseline expectations both currently and in 2030. Error bars indicate 95% confidence intervals.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, include=FALSE, fig.height=5, fig.width = 8, fig.cap='Figure S43. Mean ship-strike mortality rates predicted for fin whales and humpback whales under various mitigation scenarios, compared to baseline expectations both currently and in 2030. Error bars indicate 95% confidence intervals.'}
 
 # DO NOT INCLUDE HERE (version will be in MS)
 ggplot(mr, aes(x=impact, y=as.factor(id))) + 
@@ -3118,7 +3143,7 @@ ggplot(mr, aes(x=impact, y=as.factor(id))) +
   theme(strip.text.x = ggplot2::element_text(size=9, color='grey95', face='bold'))
 ```
 
-```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, include = FALSE, fig.height=7, fig.width = 8, fig.cap='Figure S43. Posterior estimates of ship-strike mortalities predicted for fin whales and humpback whales under various mitigation scenarios, compared to baseline expectations both currently and in 2030. Black lines indicate the mean of each posterior.'}
+```{r, echo=FALSE, eval=TRUE, warning = FALSE, message = FALSE, include = FALSE, fig.height=7, fig.width = 8, fig.cap='Figure S44. Posterior estimates of ship-strike mortalities predicted for fin whales and humpback whales under various mitigation scenarios, compared to baseline expectations both currently and in 2030. Black lines indicate the mean of each posterior.'}
 
 # DO NOT INCLUDE HERE -- WILL BE IN MS
 

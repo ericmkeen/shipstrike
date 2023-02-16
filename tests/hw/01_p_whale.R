@@ -212,7 +212,8 @@ dsm3.y %>% AIC
 dsm2.z %>% AIC
 
 # Round 4
-dsm4.y <- dsm(density.est~s(x,y,doy) + s(z) + s(zrange) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
+dsm4.y <- dsm(density.est~te(x,y,doy) + s(z) + s(zrange) + year, dso_keep, sample_table, data_table, family=tw(), method="REML")
+plot(dsm4.y)
 
 dsm4.y %>% AIC
 dsm3.zrange %>% AIC # Delta AIC = 14

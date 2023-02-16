@@ -14,7 +14,9 @@ encounter_rate(
   new_speeds = NULL,
   runs = 100,
   iterations = 100,
-  toplot = TRUE
+  toplot = TRUE,
+  xlims = NULL,
+  ylims = NULL
 )
 }
 \arguments{
@@ -63,6 +65,14 @@ If \code{runs} is more than \code{1}, simple results will be returned instead.}
 \item{iterations}{The number of simulations to produce for each run of the simulator.
 The fraction of these iterations that result in a close-encounter is taked as the estimate
 of the encounter rate for that run.}
+
+\item{toplot}{Boolean; show plots?}
+
+\item{xlims}{Optional range of x axis (two-element numeric vector), if \code{toplot} is TRUE.
+If not provided, range will be determined by results.}
+
+\item{ylims}{Optional range of y axis (two-element numeric vector0, if \code{toplot} is TRUE
+If not provided, range will be determined by results.}
 }
 \value{
 If \code{runs} is more than \code{1} (we recommend at least 100 for a
