@@ -284,7 +284,7 @@ names(lta_tab) <- c('Year','segments', 'km', 'total', 'valid', 'total', 'valid')
 knitr::kable(lta_tab,
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = 'Table S5. Effort and sighting details from line-trasect surveys within the Kitimat Fjord Surveys, 2013 - 2015. For each species, "total" counts include all detections while on systematic effort, while "valid" counts include detections with valid detection-distance estimates.') %>%
+             caption = 'Table S5. Effort and sighting details from line-transect surveys within the Kitimat Fjord Surveys, 2013 - 2015. For each species, "total" counts include all detections while on systematic effort, while "valid" counts include detections with valid detection-distance estimates.') %>%
   #kable_styling(latex_options="scale_down") %>% 
 kable_styling(font=10) %>% 
     add_header_above(header=c(" " = 1, 
@@ -836,7 +836,7 @@ saveRDS(d_fw, file='d_fw.RData')
 knitr::kable(d_fw,
              booktabs = TRUE, linesep = '',
              longtable = T,
-             caption = 'Table S11. Fin whale density (bootstrapped 95\\% confidence interval) by waterway (whales per square km), , as estimated from the best-fitting density surface model.') %>%
+             caption = 'Table S11. Fin whale density (bootstrapped 95\\% confidence interval) by waterway (whales per square km), as estimated from the best-fitting density surface model.') %>%
   #kable_styling(latex_options="scale_down") %>% 
   kable_styling(font=10) %>% 
   row_spec (0, bold = T)
@@ -1336,7 +1336,8 @@ ggc <- outcome_map(fwgridall, varplot='cooccurrence') +
 ggd <- outcome_map(hwgridall, varplot='cooccurrence') + 
   labs(title=' ', subtitle = '(d) Humpback whales, 2030')
 
-pdf('maps-cooccurrences.pdf', height=10, width=8)
+png('map-cooccurrences.png', height=10, width=8, units='in', res=200)
+#pdf('maps-cooccurrences.pdf', height=10, width=8)
 ggpubr::ggarrange(gga, ggb, ggc, ggd,
                   ncol=2, nrow=2)
 dev.off()
